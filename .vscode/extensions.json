@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "redhat.vscode-yaml",
+    "1Password.op-vscode",
+    "naumovs.color-highlight",
+    "EditorConfig.EditorConfig",
+    "bmalehorn.vscode-fish"
+  ]
+}

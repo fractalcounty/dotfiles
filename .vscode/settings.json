@@ -1,0 +1,30 @@
+{
+  "files.exclude": {
+    "**/Icon?": true
+  },
+  "files.associations": {
+    "*.yaml": "yaml",
+    "*.yml": "yaml"
+  },
+  "editor.formatOnSave": true,
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "yaml.schemas": {
+    "./.vscode/config.schema.json": "config.yaml"
+  },
+  "yaml.customTags": [
+    "!include_dir_merge_list",
+    "!include_dir_merge_named",
+    "!secret",
+    "!env_var scalar"
+  ],
+  "yaml.format.printWidth": 120,
+  "yaml.format.proseWrap": "always",
+  "yaml.format.enable": true,
+  "yaml.validate": true,
+  "yaml.hover": true,
+  "yaml.completion": true,
+  "redhat.telemetry.enabled": false,
+  "yaml.format.singleQuote": true
+}

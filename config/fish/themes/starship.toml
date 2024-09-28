@@ -1,0 +1,181 @@
+# Get editor completions based on the config schema
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+follow_symlinks = true
+format = """$directory$character"""
+right_format = """$all"""
+
+[character] # The name of the module we are configuring is 'character'
+format = "$symbol "
+success_symbol = ""
+error_symbol = "[ ✗](bold red)"
+
+[directory]
+truncation_length = 2
+fish_style_pwd_dir_length = 4
+use_logical_path = true
+truncate_to_repo = false
+format = '[$path]($style)[$read_only]($read_only_style)'
+home_symbol = '~'
+
+[git_branch]
+format = '[$symbol$branch(:$remote_branch)]($style) '
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+ahead = '⇡${count}'
+diverged = '⇕⇡${ahead_count}⇣${behind_count}'
+behind = '⇣${count}'
+
+[hostname]
+format = '[$ssh_symbol$hostname]($style) '
+
+[docker_context]
+format = '[$symbol$context]($style) '
+
+[nix_shell]
+format = '[$symbol$state( \($name\))]($style) '
+
+[custom.godot]
+command = "fish ~/.config/fish/functions/gd-info.fish"
+format = "[$symbol $output]($style) "
+detect_files = ["project.godot"]
+detect_folders = [".godot"]
+detect_extensions = [".godot", ".tscn", ".gd", ".tres"]
+when = "fish -c 'gd-find >/dev/null'"
+disabled = false
+symbol = "🤖"
+style = "bold cyan"
+
+[bun]
+format = "[$symbol]($style) "
+
+[buf]
+format = "[$symbol]($style) "
+
+[cmake]
+format = "[$symbol]($style) "
+
+[cobol]
+format = "[$symbol]($style) "
+
+[crystal]
+format = "[$symbol]($style) "
+
+[daml]
+format = "[$symbol]($style) "
+
+[dart]
+format = "[$symbol]($style) "
+
+[deno]
+format = "[$symbol]($style) "
+
+[dotnet]
+format = "[$symbol(🎯 $tfm )]($style) "
+
+[elixir]
+format = '[$symbol]($style) '
+
+[elm]
+format = '[$symbol]($style) '
+
+[erlang]
+format = '[$symbol]($style) '
+
+[fennel]
+format = '[$symbol]($style) '
+
+[gleam]
+format = '[$symbol]($style) '
+
+[golang]
+format = '[$symbol]($style) '
+
+[gradle]
+format = '[$symbol]($style) '
+
+[haxe]
+format = '[$symbol]($style) '
+
+[helm]
+format = '[$symbol]($style) '
+
+[java]
+format = '[$symbol]($style) '
+
+[julia]
+format = '[$symbol]($style) '
+
+[kotlin]
+format = '[$symbol]($style) '
+
+[lua]
+format = '[$symbol]($style) '
+
+[meson]
+format = '[$symbol]($style) '
+
+[nim]
+format = '[$symbol]($style) '
+
+[nodejs]
+format = '[$symbol]($style) '
+
+[ocaml]
+format = '[$symbol(\($switch_indicator$switch_name\) )]($style) '
+
+[opa]
+format = '[$symbol]($style) '
+
+[perl]
+format = '[$symbol]($style) '
+
+[php]
+format = '[$symbol]($style) '
+
+[pulumi]
+format = '[$symbol$stack]($style) '
+
+[purescript]
+format = '[$symbol]($style) '
+
+[python]
+format = '[$symbol]($style) '
+
+[quarto]
+format = '[$symbol]($style) '
+
+[raku]
+format = '[$symbol]($style) '
+
+[red]
+format = '[$symbol]($style) '
+
+[rlang]
+format = '[$symbol]($style) '
+
+[ruby]
+format = '[$symbol]($style) '
+
+[rust]
+format = '[$symbol]($style) '
+
+[solidity]
+format = '[$symbol]($style) '
+
+[typst]
+format = '[$symbol]($style) '
+
+[swift]
+format = '[$symbol]($style) '
+
+[vagrant]
+format = '[$symbol]($style) '
+
+[vlang]
+format = '[$symbol]($style) '
+
+[zig]
+format = '[$symbol]($style) '

@@ -1,0 +1,14 @@
+Host droplet
+	HostName ssh.droplet.fractalcounty.com
+	User root
+
+Host coolify
+	HostName 10.10.10.104
+	User root
+
+Host proxmox
+	HostName 10.10.10.10
+	User root
+
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

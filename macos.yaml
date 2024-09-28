@@ -1,0 +1,59 @@
+---
+description: macos.yaml - https://github.com/dsully/macos-defaults
+sudo: true
+current_host: true
+data:
+  NSGlobalDomain:
+    AppleShowAllExtensions: true
+    NSDocumentSaveNewDocumentsToCloud: false
+    ApplePressAndHoldEnabled: false
+    InitialKeyRepeat: 10
+    KeyRepeat: 1
+    NSNavPanelExpandedStateForSaveMode: true
+    NSNavPanelExpandedStateForSaveMode2: true
+    LSQuarantine: false
+  com.apple.Dock:
+    autohide: true
+    autohide-delay: 0
+    autohide-time-modifier: 0.4
+    mineffect: 'scale'
+    show-recents: false
+  com.apple.finder:
+    DisableAllAnimations: true
+    AppleShowAllFiles: true
+    AppleShowAllExtensions: true
+    ShowPathbar: true
+    ShowStatusBar: true
+    _FXSortFoldersFirst: true
+    _FXSortFoldersFirstOnDesktop: true
+    _FXShowPosixPathInTitle: true
+    FXPreferredViewStyle: 'icnv'
+    FXDefaultSearchScope: 'SCcf'
+    FXEnableExtensionChangeWarning: 'false'
+    FK_AppCentricShowSidebar: true
+    WarnOnEmptyTrash: false
+    FXRemoveOldTrashItems: true
+    ShowExternalHardDrivesOnDesktop: true
+    ShowHardDrivesOnDesktop: false
+    ShowRecentTags: false
+    ShowRemovableMediaOnDesktop: true
+    SidebarDevicesSectionDisclosedState: true
+    SidebarPlacesSectionDisclosedState: true
+    SidebarShowingSignedIntoiCloud: true
+    SidebarShowingiCloudDesktop: false
+    SidebarWidth: 151.0
+    SidebariCloudDriveSectionDisclosedState: true
+  com.google.Chrome:
+    AppleEnableMouseSwipeNavigateWithScrolls: false
+  org.m0k.transmission:
+    AutoUpdateBeta: true
+    DownloadAsk: false
+    MagnetOpenAsk: false
+    CheckRemoveDownloading: true
+    DeleteOriginalTorrent: true
+    WarningDonate: false
+    WarningLegal: false
+    BlocklistNew: true
+    BlocklistURL: 'http://john.bitsurge.net/public/biglist.p2p.gz'
+    BlocklistAutoUpdate: true
+    RandomPort: true
