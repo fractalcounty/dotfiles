@@ -12,7 +12,7 @@
 !/config/bat/**
 
 !/config/bat/
-!/config/bat/config
+!/config/bat/**
 
 !/config/btop/
 !/config/btop/**
@@ -20,6 +20,15 @@
 !/config/1Password/
 !/config/1Password/ssh
 !/config/1Password/ssh/agent.toml
+
+!/config/act/
+!/config/act/**
+
+!/config/atuin/
+!/config/atuin/config.toml
+
+!/config/gh/
+!/config/gh/**
 
 !/config/docker/
 !/config/docker/config.json
@@ -39,11 +48,12 @@
 !/config/gnupg/
 !/config/gnupg/gpg-agent.conf
 
-!/config/nvim/
-!/config/nvim/**
+!/config/micro/
+!/config/micro/colorschemes/
+!/config/micro/colorschemes/laramie-tc.micro
+!/config/micro/settings.json
 
 !/config/op/
-!/config/op/plugins.sh
 
 !/config/raycast/
 
