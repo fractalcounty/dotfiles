@@ -1,31 +1,52 @@
-function gum --description "Gum wrapper that sets up the theme before running the command" --wraps gum
+function gum --wraps gum --description 'Wrapper for gum CLI with style preset support'
+    # Source the gum styles file if it exists
+    if test -f $GUM_STYLE_FILE
+        source $GUM_STYLE_FILE
+    else
+        gum style --foreground="$theme_orange" "Warning: gum styles file not found, gum wrapper will be disabled."
+    end
 
-    # gum style
-    set -lx FOREGROUND $BLUE
-    set -lx BORDER_FOREGROUND $BLUE
-    set -lx BOLD true
+    set -l subcommand $argv[1]
+    set -l style
+    set -l new_argv
 
-    # gum spin
-    set -lx GUM_SPIN_TITLE_FOREGROUND $TEXT
-    set -lx GUM_SPIN_SPINNER_FOREGROUND $BLUE
+    # Parse arguments to find --style or -s
+    set -l i 1
+    while test $i -le (count $argv)
+        set -l arg $argv[$i]
+        switch $arg
+            case '--style=*'
+                set style (string split -m 1 '=' -- $arg)[2]
+            case '-s=*'
+                set style (string split -m 1 '=' -- $arg)[2]
+            case --style -s
+                set -q argv[(math $i + 1)] && set style $argv[(math $i + 1)]
+                set i (math $i + 1)
+            case --test -t
+                gum style --foreground="$theme_green" "Gum wrapper function is active!"
+                return 0
+            case '*'
+                set -a new_argv $arg
+        end
+        set i (math $i + 1)
+    end
 
-    # gum input
-    set -lx GUM_INPUT_CURSOR_FOREGROUND $TEXT
-    set -lx GUM_INPUT_PLACEHOLDER_FOREGROUND $INACTIVE_FG
-    set -lx GUM_INPUT_PROMPT_FOREGROUND $TEXT
+    # Apply default style for the subcommand if it exists
+    set -l default_style "__gum_$subcommand"
+    if functions -q $default_style
+        $default_style
+    end
 
-    # gum choose
-    set -lx GUM_CHOOSE_CURSOR_FOREGROUND $TEXT
-    set -lx GUM_CHOOSE_HEADER_FOREGROUND $TEXT
-    set -lx GUM_CHOOSE_SELECTED_FOREGROUND $TEXT
-    set -lx GUM_CHOOSE_ITEM_FOREGROUND $INACTIVE_FG
+    # Apply custom style if specified
+    if test -n "$style"
+        set -l custom_style "__gum_"$subcommand"_$style"
+        if functions -q $custom_style
+            $custom_style
+        else
+            gum style --foreground="$theme_orange" "Warning: Custom style '$style' for '$subcommand' not found. Using default style only."
+        end
+    end
 
-    # gum confirm
-    set -lx GUM_CONFIRM_PROMPT_FOREGROUND $TEXT
-    set -lx GUM_CONFIRM_SELECTED_FOREGROUND $INACTIVE_BG
-    set -lx GUM_CONFIRM_SELECTED_BACKGROUND $BLUE
-    set -lx GUM_CONFIRM_UNSELECTED_FOREGROUND $INACTIVE_FG
-    set -lx GUM_CONFIRM_UNSELECTED_BACKGROUND $INACTIVE_BG
-
-    command gum $argv
+    # Execute gum with the processed arguments
+    command gum $new_argv
 end

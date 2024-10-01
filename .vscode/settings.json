@@ -26,5 +26,7 @@
   "yaml.hover": true,
   "yaml.completion": true,
   "redhat.telemetry.enabled": false,
-  "yaml.format.singleQuote": true
+  "yaml.format.singleQuote": true,
+  "fish.path.fish_indent": "/opt/homebrew/bin/fish_indent",
+  "fish.path.fish": "/opt/homebrew/bin/fish"
 }

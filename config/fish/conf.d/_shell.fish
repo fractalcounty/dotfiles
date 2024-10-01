@@ -2,11 +2,13 @@
 # _shell.fish - fish + fisher initialization
 #
 
+set -gx __fish_config_dir $HOME/.config/fish
 set -gx __fish_cache_dir $XDG_CACHE_HOME/fish
 set -gx __fish_plugins_dir $__fish_config_dir/plugins
+set -gx __fish_themes_dir $__fish_config_dir/themes
 set -gx fisher_path $__fish_config_dir/plugins
 
-mkdir -p $__fish_cache_dir $__fish_plugins_dir
+mkdir -p $__fish_config_dir $__fish_cache_dir $__fish_plugins_dir $__fish_themes_dir
 
 if test "$fisher_paths_initialized" != true
     set --local idx (contains -i $__fish_config_dir/functions $fish_function_path || echo 1)
@@ -40,7 +42,6 @@ end
 # allow subdirs for functions and completions.
 set fish_function_path (path resolve $__fish_config_dir/functions/*/) $fish_function_path
 set fish_complete_path (path resolve $__fish_config_dir/completions/*/) $fish_complete_path
-
 ## add .hushlogin to disable login greeting if it doesn't exist already
 if not test -f $HOME/.hushlogin
     touch $HOME/.hushlogin
@@ -48,6 +49,10 @@ end
 
 ## disable new user greeting
 set fish_greeting
+
+# atuin
+set -gx COLORTERM truecolor
+atuin init fish | source
 
 ## initialize starship prompt
 set -Ux STARSHIP_CONFIG $__fish_config_dir/themes/starship.toml

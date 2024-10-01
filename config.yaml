@@ -1,13 +1,14 @@
 # yaml-language-server: $schema=./.vscode/config.schema.json
 system:
   friendly_name: "Chip's MacBook"
-  host_name: 'chips-macbook'
+  host_name: "chips-macbook"
 symlinks:
-  '$REPO_DIR/config/': '$HOME/.config'
-  '$REPO_DIR/Brewfile': '$HOME/.Brewfile'
-ide: 'cursor'
+  "$REPO_DIR/config/": "$HOME/.config"
+  "$REPO_DIR/Brewfile": "$HOME/.Brewfile"
+  "$REPO_DIR/warp/": "$HOME/.warp"
+ide: "cursor"
 brew:
-  bundle_file: '$HOME/.Brewfile'
+  bundle_file: "$HOME/.Brewfile"
   autoupdate: true
   autoupdate_interval: 43200
   cleanup: false

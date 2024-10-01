@@ -7,7 +7,13 @@
 # ===============================
 
 tap "domt4/autoupdate" # autoupdater
-tap "dsully/tap/macos-defaults" # system settings
+brew "autoupdate"
+
+tap "buo/cask-upgrade"
+brew "cask-upgrade"
+
+tap "dsully/tap" # system settings
+brew "macos-defaults"
 
 # ===============================
 # 🧪 formulae
@@ -19,6 +25,7 @@ brew 'starship' # prompt
 brew 'gum' # prettifier
 brew 'atuin' # history
 brew 'yq' # yaml processor
+brew 'groff' # text formatting
 
 ## replacements
 brew 'bat' # cat: file viewer

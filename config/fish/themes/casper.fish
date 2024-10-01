@@ -1,37 +1,20 @@
 # casper theme
 
-# main palette
-set -l foreground 3760bf # #3760bf
-set -l selection b7c1e3 # #b7c1e3
-set -l comment 848cb5 # #848cb5
-set -l red f52a65 # #f52a65
-set -l orange b15c00 # #b15c00
-set -l yellow 8c6c3e # #8c6c3e
-set -l green 587539 # #587539
-set -l purple 7847bd # #7847bd
-set -l cyan 007197 # #007197
-set -l pink 9854f1 # #9854f1
-
-# syntax highlighting
-set -g fish_color_normal $foreground
-set -g fish_color_command $cyan
-set -g fish_color_keyword $pink
-set -g fish_color_quote $yellow
-set -g fish_color_redirection $foreground
-set -g fish_color_end $orange
-set -g fish_color_option $pink
-set -g fish_color_error $red
-set -g fish_color_param $purple
-set -g fish_color_comment $comment
-set -g fish_color_selection --background=$selection
-set -g fish_color_search_match --background=$selection
-set -g fish_color_operator $green
-set -g fish_color_escape $pink
-set -g fish_color_autosuggestion $comment
-
-# completion pager
-set -g fish_pager_color_progress $comment
-set -g fish_pager_color_prefix $cyan
-set -g fish_pager_color_completion $foreground
-set -g fish_pager_color_description $comment
-set -g fish_pager_color_selected_background --background=$selection
+# palette
+set -gx theme_red "#8c4351" # this keyword, html elements, regex group symbol, css units, terminal red
+set -gx theme_orange "#965027" # number and boolean constants, language support constants
+set -gx theme_yellow "#8f5e15" # function parameters, regex character sets, terminal yellow
+set -gx theme_light_yellow "#634f30" # parameters inside functions (semantic highlighting only)
+set -gx theme_green "#385f0d" # strings, css class names
+set -gx theme_light_green "#33635c" # object literal keys, markdown links, terminal green
+set -gx theme_teal "#33635c" # regex literal strings
+set -gx theme_cyan "#006c86" # language support functions, css html elements
+set -gx theme_light_blue "#0f4b6e" # object properties, regex quantifiers and flags, markdown headings, terminal cyan, markdown code, import/export keywords
+set -gx theme_blue "#2959aa" # function names, css property names, terminal blue
+set -gx theme_purple "#5a3e8e" # control keywords, storage types, regex symbols and operators, html attributes, terminal magenta
+set -gx theme_normal "#343b58" # variables, class names, terminal white
+set -gx theme_muted "#40434f" # markdown text, html text
+set -gx theme_comment "#6c6e75" # comments
+set -gx theme_block "#343b58" # terminal black
+set -gx theme_bg "#e6e7ed" # background (storm)
+set -gx theme_black "#0f0f14" # background (night)

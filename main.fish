@@ -8,6 +8,7 @@ set -gx VERBOSE false
 
 source "$REPO_DIR/src/utils/styles.fish"
 source "$REPO_DIR/src/utils/log.fish"
+source "$REPO_DIR/config/fish/functions/alias/gum.fish"
 
 # usage: 'cfg [key]'
 function cfg
@@ -87,7 +88,7 @@ function run_selected_scripts
 end
 
 function main
-    gum style --foreground "$TEXT" --border normal --margin 0 --padding "0 1" "chip's macOS dotfiles"
+    gum style "chip's macOS dotfiles" -p="title"
 
     set run_option (gum choose --header="Commands:" "Run (auto)" "Run (custom)" "System update" "Open in IDE")
 

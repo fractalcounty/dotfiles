@@ -8,6 +8,7 @@ set -gx XDG_CONFIG_HOME $HOME/.config
 set -gx XDG_DATA_HOME $HOME/.local/share
 set -gx XDG_STATE_HOME $HOME/.local/state
 set -gx XDG_CACHE_HOME $HOME/.cache
+set -gx XDG_BIN_HOME $HOME/.local/bin
 mkdir -p $XDG_CONFIG_HOME $XDG_DATA_HOME $XDG_STATE_HOME $XDG_CACHE_HOME
 
 # custom dirs
@@ -18,7 +19,7 @@ mkdir -p $PROJECTS $DOTFILES
 # editors
 set -gx PAGER less
 set -gx VISUAL cursor
-set -gx EDITOR nano
+set -gx EDITOR micro
 set -gx BROWSER open
 
 # manpages
