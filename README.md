@@ -1,10 +1,9 @@
 # dotfiles
-
 [![macOS](https://img.shields.io/badge/macOS-Sequoia%2015.1-blue)](https://www.apple.com/macos/macos-sequoia-preview/) [![Shell](https://img.shields.io/badge/shell-fish-4CA4F7)](https://fishshell.com/) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-(aka chip's macOS Sequoia setup)
-
-![preview](https://github.com/user-attachments/assets/9a3fc290-41f7-489c-8eed-1bf30d2562cd)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/9fad050e-56b0-4f02-b203-fdc1445d9583" alt="preview" width="700">
+</p>
 
 This repo is essentially three things:
 
