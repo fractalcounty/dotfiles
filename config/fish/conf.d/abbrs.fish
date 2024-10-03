@@ -15,10 +15,3 @@ abbr -a npx bunx
 abbr -a pnpm bun
 abbr -a pnpx bunx
 abbr -a yarn bun
-
-# 1password shell plugins
-# https://developer.1password.com/docs/cli/shell-plugins/
-abbr -a brew 'op plugin run -- brew'
-abbr -a openai 'op plugin run -- openai'
-abbr -a gh 'op plugin run -- gh'
-abbr -a wrangler 'op plugin run -- wrangler'

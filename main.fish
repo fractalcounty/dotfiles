@@ -3,27 +3,35 @@
 # Runs selected scripts in ./src/
 
 set -gx REPO_DIR (realpath (dirname (status -f)))
-set -gx CONFIG "$REPO_DIR/config.yaml"
-set -gx VERBOSE false
+set -x CONFIG "$REPO_DIR/config.yaml"
+set -q GUM_THEMES_DIR; or set -gx GUM_THEMES_DIR "$REPO_DIR/config/fish/themes/gum"
 
-source "$REPO_DIR/src/utils/styles.fish"
-source "$REPO_DIR/src/utils/log.fish"
-source "$REPO_DIR/config/fish/functions/alias/gum.fish"
-
-# usage: 'cfg [key]'
-function cfg
-    yq $argv $CONFIG
-end
-
-# Execution order is important, needs to run sequentially
 set setup_scripts \
     "system.fish:💻:System settings successfully set!" \
     "symlinks.fish:🔗:Symlinks created successfully!" \
     "brew.fish:🍺:Homebrew is properly configured!" \
     "fish.fish:🐟:Fish shell is properly configured!" \
-    "ssh.fish:🔑:SSH and 1Password is good to go!" \
-    "ide.fish:🚀:IDE is configured!" \
+    "op.fish:🔑: 1Password CLI and SSH is good to go!" \
     "finish.fish:✨:Setup is complete!"
+
+source "$REPO_DIR/config/fish/functions/alias/gum.fish"
+source "$REPO_DIR/config/fish/functions/slog.fish"
+
+function cfg
+    yq $argv $CONFIG
+end
+
+if test (cfg '.verbose') = true
+    slog debug
+else
+    slog info
+end
+
+function format_output
+    while read -l line
+        gum style -th output "$line"
+    end
+end
 
 function run_all_scripts
     for script_entry in $setup_scripts
@@ -44,13 +52,13 @@ function run_script
     set script_path "$REPO_DIR/src/$script"
 
     if not test -f "$script_path"
-        log_message $ERROR "❌ $script not found in $REPO_DIR/src/"
+        gum log -l error "$script not found in $REPO_DIR/src/"
         return 1
     end
 
     chmod +x "$script_path"
     if test "$script" != "finish.fish"
-        gum style --margin 1 --align center "$emoji Running $script..."
+        gum style -th section "$emoji $script"
     end
 
     source "$script_path"
@@ -58,13 +66,13 @@ function run_script
     set exit_status $status
 
     if test $exit_status -ne 0
-        log_message $ERROR "❌ $emoji $script exited with non-zero status."
+        gum log -l error "$emoji $script exited with non-zero status."
         if not gum confirm "Do you want to continue with the setup?"
-            log_message $ERROR "🛑 Setup aborted by user."
+            gum log -l error "Setup aborted by user."
             exit 1
         end
     else
-        gum style --margin 1 --align center --foreground "$BLUE" "$emoji $outro"
+        gum log -l info "$outro"
         # example: ✨ Setup is complete!
     end
 end
@@ -88,18 +96,18 @@ function run_selected_scripts
 end
 
 function main
-    gum style "chip's macOS dotfiles" -p="title"
+    gum style "chip's macOS dotfiles" -th="title"
 
     set run_option (gum choose --header="Commands:" "Run (auto)" "Run (custom)" "System update" "Open in IDE")
 
     switch "$run_option"
         case 'Run (auto)'
             if gum confirm "Are you sure you want to run all scripts automatically?"
-                log_message $INFO "Starting automatic setup..."
+                gum log -l info "Starting automatic setup..."
                 run_all_scripts
                 echo
             else
-                log_message $WARNING "Automatic setup cancelled."
+                gum log -l warn "Automatic setup cancelled."
             end
             exit $status
         case 'Run (custom)'
@@ -111,7 +119,7 @@ function main
             set selected_scripts (gum choose --no-limit --header "Select setup scripts:" $script_names)
 
             if test (count $selected_scripts) -eq 0
-                log_message $WARNING "No scripts selected. Exiting."
+                gum log -l warn "No scripts selected. Exiting."
                 exit 0
             end
 

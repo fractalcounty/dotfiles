@@ -1,30 +1,32 @@
-#!/opt/homebrew/bin/fish
-# Improved brews function with gum styling
-
 function brews --description "Show brewed formulae and casks"
-    set -l formulae (brew leaves | xargs brew deps --installed --for-each)
-    set -l casks (brew list --cask 2>/dev/null)
+    # Create a temporary file to store the output
+    set -l temp_file (mktemp)
 
     # Header for Formulae
-    gum style --foreground "$BLUE" --bold --margin "0 0" --padding "0 5" --border normal --border-foreground "$BLUE" Formulae
+    echo (gum style --foreground "$theme_purple" --bold "Formulae:") >>$temp_file
 
     # Format and display formulae
-    for line in $formulae
-        set -l parts (string split ':' $line)
+    brew leaves | xargs brew deps --installed --for-each | while read -l line
+        set -l parts (string split ': ' $line)
         set -l name $parts[1]
         set -l deps $parts[2]
-
-        echo (gum style --foreground normal $name) \
-            (gum style --foreground "$INACTIVE_FG" $deps)
+        echo (gum style "• $name") (gum style --foreground "$theme_dark_gray" $deps) >>$temp_file
     end
 
-    echo
+    echo >>$temp_file
 
     # Header for Casks
-    gum style --foreground "$BLUE" --bold --margin "0 0" --padding "0 5" --border normal --border-foreground "$BLUE" Casks
+    echo >>$temp_file
+    echo (gum style --foreground "$theme_purple" --bold "Casks:") >>$temp_file
 
     # Format and display casks
-    for cask in $casks
-        gum style --foreground normal $cask
+    brew list --cask 2>/dev/null | sed 's/^/• /' | while read -l line
+        echo (gum style "$line") >>$temp_file
     end
+
+    # Display the output using gum pager
+    gum pager --show-line-numbers=false --foreground="$theme_dark_gray" -th minimal <$temp_file
+
+    # Clean up the temporary file
+    rm $temp_file
 end

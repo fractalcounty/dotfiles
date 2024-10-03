@@ -50,7 +50,7 @@ function rmdot --description 'Safely delete non-important metadata files recursi
     end
 
     # Use fd to find metadata files efficiently
-    set -l files_to_remove (sudo fd -H -I -t f (string join '|' $metadata_patterns) $target_dir)
+    set -l files_to_remove (fd -H -I -t f (string join '|' $metadata_patterns) $target_dir)
 
     if test (count $files_to_remove) -eq 0
         gum style --foreground "$theme_orange" "No metadata files found in '$target_dir'."
@@ -90,8 +90,17 @@ function rmdot --description 'Safely delete non-important metadata files recursi
         end
     else
         # Use a single sudo call for all deletions
-        echo $files_to_remove | sudo xargs rm -f
-        set removed_files (count $files_to_remove)
+        for file in $files_to_remove
+            if test -f "$file"
+                if sudo rm -f "$file"
+                    set removed_files (math $removed_files + 1)
+                else
+                    gum log -l error "Failed to remove: $file"
+                end
+            else
+                gum log -l warn "File not found: $file"
+            end
+        end
     end
 
     # Final summary

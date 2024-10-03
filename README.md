@@ -30,10 +30,10 @@ This repo is essentially three things:
 Here's the default setup out of the box:
 
 - OS: [macOS Sequoia 15.1](https://www.apple.com/macos/macos-sequoia-preview/)
-- Package manager: [homebrew](https://brew.sh/)
+- Terminal: [ghostty](https://github.com/ghostty-org/ghostty)
 - Shell: [fish](https://fishshell.com/) w/ [Starship](https://starship.rs/guide/) prompt
+- Package manager: [homebrew](https://brew.sh/)
 - Theme: [Tokyo Night Storm](https://www.vscolors.com/themes/1cac7443-911e-48b9-8341-49f3880c288a-03f6b671)
-- Terminal: [WezTerm](https://wezfurlong.org/wezterm/)
 - Editor: [neovim](https://neovim.io/) ([nvchad](https://nvchad.com/))
 - IDE: [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) and sometimes [Cursor](https://cursor.sh/)
 - Launcher: [Raycast](https://www.raycast.com/)
@@ -102,7 +102,7 @@ Here's the gist of what some of the modules in the `/src/` directory do:
 - 🔗 `symlinks.fish`: Creates the symlinks defined in [config.yaml](https://github.com/fractalcounty/dotfiles/blob/main/config.yaml)
 - 🍺 `brew.fish`: Configures Homebrew, installs everything in the [Brewfile](https://github.com/fractalcounty/dotfiles/blob/main/Brewfile), validates installation, etc.
 - 🐟 `fish.fish`: Initializes the fish shell, checks for issues, and sets it as the default system shell
-- 🔑 `ssh.fish`: Configures SSH, git, secrets, and various [1Password shell plugins](https://developer.1password.com/docs/cli/shell-plugins/)
+- 🔑 `op.fish`: Configures SSH, git, secrets, and various [1Password shell plugins](https://developer.1password.com/docs/cli/shell-plugins/)
 
 Assuming all goes well, you should be able to just modify the dotfiles via the repo directly or via the default symlink at `$HOME/.config/` for any future configuration.
 

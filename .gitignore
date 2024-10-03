@@ -30,6 +30,9 @@
 !/config/gh/
 !/config/gh/**
 
+!/config/ghostty/
+!/config/ghostty/**
+
 !/config/docker/
 !/config/docker/config.json
 
@@ -62,9 +65,6 @@
 
 !/config/starship/
 !/config/starship/**
-
-!/config/wezterm/
-!/config/wezterm/**
 
 !/src/
 !/src/**

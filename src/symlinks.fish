@@ -3,26 +3,24 @@
 # Creates symlinks and sets up dotfiles repo
 
 function main
-    #log_message $DEBUG "Starting symlinks setup..."
-
-    # Ensure $REPO_DIR is set
+    # ensure $REPO_DIR is set
     if not set -q REPO_DIR
-        #log_message $ERROR "REPO_DIR is not set. Please run this script through setup.fish"
+        gum log -l error "REPO_DIR is not set. Please set it manually or run this through "(gum style -th code fish.fish.)
         return 1
     end
 
     # Fetch symlinks from $CONFIG file
     set -l symlinks (cfg '.symlinks | to_entries | .[] | [.key, .value] | .[]')
 
-    #log_message $INFO "The following symlinks will be created:"
+    gum log -l info "The following symlinks will be created:"
     echo
 
     set counter 1
     for i in (seq 1 2 (count $symlinks))
         set -l src (eval echo $symlinks[$i])
         set -l dest (eval echo $symlinks[(math $i + 1)])
-        set -l src_formatted (gum style --foreground "$TEXT" --background "$INACTIVE_BG" "$src")
-        set -l dest_formatted (gum style --foreground "$TEXT" --background "$INACTIVE_BG" "$dest")
+        set -l src_formatted (gum style -th code "$src")
+        set -l dest_formatted (gum style -th code "$dest")
         echo "$counter. $src_formatted"
         echo "   ↳ $dest_formatted"
         echo
@@ -31,33 +29,29 @@ function main
     echo
 
     if gum confirm "Do you want to proceed?"
-        #log_message $DEBUG "Creating symlinks and setting permissions..."
+        gum log -l debug "Creating symlinks and setting permissions..."
 
         for i in (seq 1 2 (count $symlinks))
             set -l src (eval echo $symlinks[$i])
             set -l dest (eval echo $symlinks[(math $i + 1)])
 
-            # Remove existing symlinks or files at destination
+            # remove existing symlinks or files at destination
             if test -e $dest -o -L $dest
-                #log_message $DEBUG "Removing existing file or symlink: $dest"
+                gum log -l debug "Removing existing file or symlink: $dest"
                 rm -rf $dest
             end
 
             # Create the symlink
-            #log_message $DEBUG "Creating symlink: $src -> $dest"
             if test -d $src
-                # Create directory symlink
-                ln -s $src $dest
+                ln -s $src $dest # file symlink
             else
-                # Create file symlink
-                ln -s $src $dest
+                ln -s $src $dest # dir symlink
             end
-            #log_message $DEBUG "Created symlink: $dest"
+            gum log -l debug "Created symlink: $dest"
         end
 
-        #log_message $DEBUG "Environment setup completed"
+        gum log -l debug "Environment setup completed"
     else
-        #log_message $WARNING "Setup cancelled by user"
         return 1
     end
 end

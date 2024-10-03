@@ -1,53 +1,46 @@
 #!/opt/homebrew/bin/fish
 # fish.fish - fish shell configuration script
 
-function format_output
-    echo
-    gum style --border none --foreground "$TEXT" --background "$INACTIVE_BG"
-    echo
-end
+gum log -l debug "Starting initialization process..."
 
-log_message $DEBUG "Starting initialization process..."
-
-set -l formatted_shells (gum style --foreground "$TEXT" --background "$INACTIVE_BG" "/etc/shells")
-log_message $DEBUG "Ensuring fish is in $formatted_shells..."
+gum log -l debug "Ensuring fish is in "(gum style -th code /etc/shells)
 if not grep -q /opt/homebrew/bin/fish /etc/shells
     echo /opt/homebrew/bin/fish | sudo tee -a /etc/shells >/dev/null
     if test $status -ne 0
-        log_message $ERROR "Failed to add fish to $formatted_shells"
+        gum log -l error "Failed to add fish to "(gum style -th code /etc/shells)
         exit 1
     end
-    log_message $INFO "Added fish to $formatted_shells"
+    gum log -l info "Added fish to "(gum style -th code /etc/shells)
 else
-    log_message $INFO "Fish is in $formatted_shells"
+    gum log -l info "Fish is in "(gum style -th code /etc/shells)
 end
 
-log_message $DEBUG "Ensuring fish is the default shell..."
+gum log -l debug "Ensuring fish is the default shell..."
 if not string match -q "*fish" $SHELL
     if not sudo chsh -s /opt/homebrew/bin/fish $USER
-        log_message $ERROR "Failed to set fish as the default shell."
+        gum log -l error "Failed to set fish as the default shell."
         exit 1
     end
-    log_message $INFO "Fish shell has been set as the default shell."
+    gum log -l info "Fish shell has been set as the default shell."
 else
-    log_message $INFO "Fish is the default shell."
+    gum log -l info "Fish is the default shell."
 end
 
-log_message $DEBUG "Ensuring homebrew's binaries are in the fish path..."
+gum log -l debug "Ensuring homebrew's binaries are in the fish path..."
 if not contains /opt/homebrew/bin $fish_user_paths
     fish_add_path /opt/homebrew/bin
     if test $status -ne 0
-        log_message $ERROR "Failed to add Homebrew's binaries to fish PATH."
+        gum log -l error "Failed to add Homebrew's binaries to fish "(gum style -th code PATH)
         exit 1
     end
-    log_message $INFO "Homebrew's binaries have been added to fish PATH."
+    gum log -l info "Homebrew's binaries have been added to fish "(gum style -th code PATH)
 else
-    log_message $DEBUG "Homebrew's binaries are in the fish PATH."
+    gum log -l debug "Homebrew's binaries are in the fish "(gum style -th code PATH)
 end
 
-log_message $DEBUG "Attempting to create fish completion files..."
-if not gum spin --spinner dot --title "Generating fish completions..." -- fish -c fish_update_completions
-    log_message $ERROR "Failed to create fish completion files."
+gum log -l debug "Attempting to create fish completion files..."
+if not gum spin --title "Generating fish completions..." -- fish -c fish_update_completions
+    gum log -l error "Failed to create fish completion files."
     exit 1
 end
-log_message $INFO "Generated fish completions."
+gum log -l info "Generated fish completions."

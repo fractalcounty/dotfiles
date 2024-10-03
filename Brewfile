@@ -6,14 +6,18 @@
 # 🚰 taps
 # ===============================
 
-tap "domt4/autoupdate" # autoupdater
+# homebrew auto updater
+tap "domt4/autoupdate"
 brew "autoupdate"
 
-tap "buo/cask-upgrade"
-brew "cask-upgrade"
-
-tap "dsully/tap" # system settings
+# macOS settings setter
+tap "dsully/tap"
 brew "macos-defaults"
+
+# pretty CLI utilities
+tap "charmbracelet/tap"
+brew "wishlist"
+brew "gum"
 
 # ===============================
 # 🧪 formulae
@@ -22,7 +26,6 @@ brew "macos-defaults"
 ## shell & scripting
 brew 'fish' # shell
 brew 'starship' # prompt
-brew 'gum' # prettifier
 brew 'atuin' # history
 brew 'yq' # yaml processor
 brew 'groff' # text formatting
@@ -67,8 +70,6 @@ brew 'git-lfs' # large file storage
 brew 'gh' # github cli
 brew 'act' # github actions
 brew 'rustup' # rust
-brew 'node' # nodejs runtime
-brew 'bun' # bun runtime
 brew 'caddy' # web server/reverse proxy
 brew 'python' # python
 brew 'pipx' # python package manager 

@@ -64,3 +64,5 @@ enable_transience
 for manpath in (path filter $__fish_data_dir/man /usr/local/share/man /usr/share/man)
     set -a MANPATH $manpath
 end
+
+slog info
