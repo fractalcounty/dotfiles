@@ -85,7 +85,7 @@ Now would be the time to configure any software that requires partial configurat
 
 ### Running the setup script (`main.fish`)
 
-[usage.webm](https://github.com/user-attachments/assets/b2f4e22c-a799-4fd6-9e55-2046883a7f8c)
+[chips-dotfiles-usage.mp4](https://github.com/user-attachments/assets/403a9da7-1326-419c-9404-96174090f34f)
 
 ```fish
 ./main.fish [--verbose]
