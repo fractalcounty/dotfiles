@@ -8,9 +8,9 @@ set -gx THEME_FILE $__fish_themes_dir/$THEME.fish
 source $__fish_themes_dir/laramie.fish
 
 # gum
+set -gx GUM_THEMES_DIR $__fish_themes_dir/gum; and mkdir -p $GUM_THEMES_DIR
 set -gx GLAMOUR_STYLE $__fish_themes_dir/$THEME.json
 set -gx GUM_FORMAT_THEME $__fish_themes_dir/$THEME.json
-set -gx GUM_THEMES_DIR $__fish_themes_dir/gum; and mkdir -p $GUM_THEMES_DIR
 
 # Less colors
 set -gx LESS_TERMCAP_mb (set_color -o blue)

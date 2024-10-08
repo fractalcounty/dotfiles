@@ -2,11 +2,26 @@
 
 function gum --wraps gum --description 'Wrapper for gum providing additional theme functionality'
 
-    # if contains -- --help $argv; or contains -- -h $argv
-    #     command gum $argv
-    #     __gum_custom_help
-    #     return 0
-    # end
+    function _help
+        set -lx GUM_FORMAT_THEME "$__fish_themes_dir/tui.json"
+        set -lx GLAMOUR_STYLE "$__fish_themes_dir/tui.json"
+
+        set -l help \
+            "# chip's gum wrapper script" \
+            "## Various additions to the gum CLI tool" \
+            "# Commands:" \
+            "- **gum log**   -l \<level\> \<message\>       Publish a log message" \
+            "- **slog**         \<level\>                 Set the global log level safely" \
+            "# Environment:" \
+            "- **GUM_THEMES_DIR**                       Directory containing custom theme files"
+        gum format -- $help
+    end
+
+    if contains -- --help $argv; or contains -- -h $argv
+        command gum $argv
+        _help
+        return 0
+    end
 
     # GUM_THEMES_DIR must be set to activate wrapper
     if set -q GUM_THEMES_DIR && test -d $GUM_THEMES_DIR
@@ -180,39 +195,3 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
         command gum $argv
     end
 end
-
-# function __gum_custom_help
-#     echo "
-# Chip's Gum wrapper
-
-# This wrapper adds theming & log level functionality to the original gum command.
-
-# Environment variables:
-#   GUM_THEMES_DIR        Theme file directory (required)
-#   LOG_LEVEL             Current log level (required)
-
-# Flags:
-#   -th, --theme=THEME    Specify a custom theme for the gum subcommand
-
-# Themes:
-#   Theme file:           GUM_THEMES_DIR/<subcommand>.fish
-#   Default theme:        __gum_<subcommand>
-#   Custom theme:         __gum_<subcommand>_<theme>
-
-#   Example:
-#     # Apply default and custom theme
-#     gum <subcommand> <args> -th <theme>
-
-#     # Apply default theme only
-#     gum <subcommand> <args>
-
-# Log Level:
-#   Set log level:        slog [debug/info/warning/error/fatal]
-#   Get current level:    echo \$LOG_LEVEL
-
-#   Example:
-#     slog info
-#     gum log -l debug 'This is not displayed'
-#     slog debug
-#     gum log -l debug 'This is displayed'"
-# end

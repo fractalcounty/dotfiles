@@ -1,10 +1,6 @@
-Host droplet
-	HostName ssh.droplet.fractalcounty.com
-	User root
-
-Host coolify
-	HostName 10.10.10.104
-	User root
+Host gh github.com
+	HostName github.com
+	User git
 
 Host proxmox
 	HostName 10.10.10.10
