@@ -44,6 +44,7 @@ brew 'ripgrep' # grep: fast search
 brew 'coreutils' # gnu: basic commands
 
 ## utilities
+brew 'chafa' # image viewer
 brew 'fswatch' # file change monitor
 brew 'fzf' # fuzzy finder
 brew 'macchina' # system info

@@ -1,29 +1,13 @@
 function reload --description 'Refresh terminal while preserving the current directory'
     set -l current_dir (pwd)
 
-    if not test -d "$current_dir"
-        echo "Error: Current directory no longer exists." >&2
+    set -l app_name "$TERM_PROGRAM.app"
+    if not open -a $app_name "$current_dir"
+        gum log -l error "Failed to open new "(gum style -th code "$TERM_PROGRAM")" window."
         return 1
     end
 
-    switch "$TERM_PROGRAM"
-        case ghostty
-            if not command -q open
-                echo "Error: 'open' command not found." >&2
-                return 1
-            end
+    sleep 0.5
 
-            if not open -a Ghostty.app "$current_dir"
-                echo "Error: Failed to open new ghostty window." >&2
-                return 1
-            end
-
-            sleep 0.5
-
-            exit 0
-
-        case '*'
-            echo "Error: Unsupported terminal: $TERM_PROGRAM" >&2
-            return 1
-    end
+    exit 0
 end

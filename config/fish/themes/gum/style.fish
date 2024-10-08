@@ -35,12 +35,18 @@ function __gum_style_section
     set -gx BOLD true
 end
 
+function __gum_style_prompt
+    set -gx FOREGROUND $theme_foreground
+    set -gx MARGIN "1 1"
+    set -gx BOLD false
+end
+
 function __gum_style_text
     set -gx FOREGROUND $theme_foreground
 end
 
 function __gum_style_code
-    set -gx FOREGROUND $theme_foreground
+    set -gx FOREGROUND $theme_white
     set -gx BACKGROUND $theme_dust
 end
 

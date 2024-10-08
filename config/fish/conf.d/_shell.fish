@@ -2,14 +2,6 @@
 # _shell.fish - fish + fisher initialization
 #
 
-set -gx __fish_config_dir $HOME/.config/fish
-set -gx __fish_cache_dir $XDG_CACHE_HOME/fish
-set -gx __fish_plugins_dir $__fish_config_dir/plugins
-set -gx __fish_themes_dir $__fish_config_dir/themes
-set -gx fisher_path $__fish_config_dir/plugins
-
-mkdir -p $__fish_config_dir $__fish_cache_dir $__fish_plugins_dir $__fish_themes_dir
-
 if test "$fisher_paths_initialized" != true
     set --local idx (contains -i $__fish_config_dir/functions $fish_function_path || echo 1)
     set fish_function_path $fish_function_path[1..$idx] $fisher_path/functions $fish_function_path[(math $idx + 1)..]
@@ -60,9 +52,10 @@ type -q starship || return 1
 cachecmd starship init fish | source
 enable_transience
 
-## man page paths
-for manpath in (path filter $__fish_data_dir/man /usr/local/share/man /usr/share/man)
-    set -a MANPATH $manpath
-end
+fzf_configure_bindings --directory=\cf --history=""
+set -gxa FZF_DEFAULT_OPTS "--color=fg:-1,fg+:#bb9af7,bg:-1,bg+:#373d5a --color=hl:#7dcfff,hl+:#bb9af7,info:#565f89,marker:#73daca --color=prompt:#2ac3de,spinner:#2ac3de,pointer:#bb9af7,header:#565f89 --color=border:#373d5a,label:#7dcfff,query:#7aa2f7"
+
+set -gx fifc_editor "$EDITOR"
+set -gx fifc_bat_opts --color=always --wrap=character
 
 slog info

@@ -1,4 +1,5 @@
 # dotfiles
+
 [![macOS](https://img.shields.io/badge/macOS-Sequoia%2015.1-blue)](https://www.apple.com/macos/macos-sequoia-preview/) [![Shell](https://img.shields.io/badge/shell-fish-4CA4F7)](https://fishshell.com/) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 <p align="center">

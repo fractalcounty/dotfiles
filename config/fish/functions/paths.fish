@@ -1,6 +1,8 @@
-function paths --description 'Prettify $PATH output using gum'
+function paths --description 'Pretty print $PATH variables using gum'
     set path_list (string split ':' $PATH)
+    set markdown_content
     for path in $path_list
-        gum style "$path" -th output
+        set -a markdown_content "- ``$path``"
     end
+    printf '%s\n' $markdown_content | gum format
 end

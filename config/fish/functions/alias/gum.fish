@@ -1,11 +1,20 @@
+# $HOME/.config/fish/functions/gum.fish
+
 function gum --wraps gum --description 'Wrapper for gum providing additional theme functionality'
-    # Ensure GUM_THEMES_DIR is set and is a valid directory
+
+    # if contains -- --help $argv; or contains -- -h $argv
+    #     command gum $argv
+    #     __gum_custom_help
+    #     return 0
+    # end
+
+    # GUM_THEMES_DIR must be set to activate wrapper
     if set -q GUM_THEMES_DIR && test -d $GUM_THEMES_DIR
         set -l subcommand $argv[1]
         set -l theme
         set -l new_argv
 
-        # Parse arguments to find --theme or -th
+        # parse arguments to find --theme or -th
         set -l i 1
         while test $i -le (count $argv)
             set -l arg $argv[$i]
@@ -26,7 +35,7 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
             set i (math $i + 1)
         end
 
-        # Source the subcommand-specific theme file if it exists
+        # src the subcommand-specific theme file if it exists
         set -l subcommand_theme_file $GUM_THEMES_DIR/$subcommand.fish
         if test -f $subcommand_theme_file
             source $subcommand_theme_file
@@ -34,7 +43,7 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
             gum log -l warn --prefix="Gum Wrapper" "'$subcommand_theme_file' is invalid or missing."
         end
 
-        # Apply the subcommand's default theme if it exists
+        # apply the subcommand's default theme if it exists
         set -l default_theme "__gum_$subcommand"
         if functions -q $default_theme
             $default_theme
@@ -42,7 +51,7 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
             gum log -l warn --prefix="Gum Wrapper" "Default theme function '$default_theme' is invalid or missing from '$subcommand_theme_file'."
         end
 
-        # Apply custom theme if specified
+        # apply custom theme if specified
         if test -n "$theme"
             set -l custom_theme "__gum_"$subcommand"_$theme"
             if functions -q $custom_theme
@@ -52,15 +61,9 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
             end
         end
 
-        # ============================
-        # Begin: Enhanced 'gum log' Handling
-        # ============================
         if test "$subcommand" = log
-            # Initialize message_level to 'none' by default
             set -l message_level none
 
-            # Parse $argv to find --level or -l flags
-            # Start from index 2 since argv[1] is 'log'
             for index in (seq 2 (count $argv))
                 set -l arg $argv[$index]
                 switch $arg
@@ -81,14 +84,10 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
                 end
             end
 
-            # Normalize 'warn' to 'warning' for consistency
             if test "$message_level" = warn
                 set message_level warning
             end
 
-            # ============================
-            # Setting GUM_LOG_LEVEL_FOREGROUND
-            # ============================
             switch $message_level
                 case debug
                     if set -q GUM_LOG_LEVEL_DEBUG
@@ -129,11 +128,6 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
                     set -gx GUM_LOG_LEVEL_FOREGROUND ''
             end
 
-            # ============================
-            # Log Level Filtering
-            # ============================
-            # Function to map log levels to numeric values
-            # Higher number means higher severity
             set -l message_level_num 0
             switch $message_level
                 case debug
@@ -152,7 +146,7 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
                     set message_level_num 0
             end
 
-            # Map global LOG_LEVEL to numeric value
+            # map global LOG_LEVEL to numeric value
             set -l log_level_num 0
             switch $LOG_LEVEL
                 case debug
@@ -169,20 +163,16 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
                     set log_level_num 0
             end
 
-            # Determine whether to display the log message
+            # determine whether to display the log message
             if test "$message_level_num" -ge "$log_level_num" -o "$message_level" = none
-                # Proceed to execute the gum log command
+                # proceed to execute the gum log command
                 command gum $new_argv
             else
                 # Do not display the log message; exit silently
                 return 0
             end
         else
-            # ============================
-            # End: Enhanced 'gum log' Handling
-            # ============================
-
-            # For all other subcommands, proceed as usual
+            # for all other subcommands, proceed as usual
             command gum $new_argv
         end
     else
@@ -190,3 +180,39 @@ function gum --wraps gum --description 'Wrapper for gum providing additional the
         command gum $argv
     end
 end
+
+# function __gum_custom_help
+#     echo "
+# Chip's Gum wrapper
+
+# This wrapper adds theming & log level functionality to the original gum command.
+
+# Environment variables:
+#   GUM_THEMES_DIR        Theme file directory (required)
+#   LOG_LEVEL             Current log level (required)
+
+# Flags:
+#   -th, --theme=THEME    Specify a custom theme for the gum subcommand
+
+# Themes:
+#   Theme file:           GUM_THEMES_DIR/<subcommand>.fish
+#   Default theme:        __gum_<subcommand>
+#   Custom theme:         __gum_<subcommand>_<theme>
+
+#   Example:
+#     # Apply default and custom theme
+#     gum <subcommand> <args> -th <theme>
+
+#     # Apply default theme only
+#     gum <subcommand> <args>
+
+# Log Level:
+#   Set log level:        slog [debug/info/warning/error/fatal]
+#   Get current level:    echo \$LOG_LEVEL
+
+#   Example:
+#     slog info
+#     gum log -l debug 'This is not displayed'
+#     slog debug
+#     gum log -l debug 'This is displayed'"
+# end

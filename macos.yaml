@@ -11,7 +11,6 @@ data:
     KeyRepeat: 1
     NSNavPanelExpandedStateForSaveMode: true
     NSNavPanelExpandedStateForSaveMode2: true
-    LSQuarantine: false
   com.apple.Dock:
     autohide: true
     autohide-delay: 0
@@ -27,10 +26,7 @@ data:
     _FXSortFoldersFirst: true
     _FXSortFoldersFirstOnDesktop: true
     _FXShowPosixPathInTitle: true
-    FXPreferredViewStyle: 'icnv'
-    FXDefaultSearchScope: 'SCcf'
     FXEnableExtensionChangeWarning: 'false'
-    FK_AppCentricShowSidebar: true
     WarnOnEmptyTrash: false
     FXRemoveOldTrashItems: true
     ShowExternalHardDrivesOnDesktop: true
@@ -41,8 +37,6 @@ data:
     SidebarPlacesSectionDisclosedState: true
     SidebarShowingSignedIntoiCloud: true
     SidebarShowingiCloudDesktop: false
-    SidebarWidth: 151.0
-    SidebariCloudDriveSectionDisclosedState: true
   com.google.Chrome:
     AppleEnableMouseSwipeNavigateWithScrolls: false
   org.m0k.transmission:
