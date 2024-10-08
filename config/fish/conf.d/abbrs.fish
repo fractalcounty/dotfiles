@@ -9,3 +9,6 @@ abbr -a tree tre
 abbr -a ping 'ping -c 5'
 abbr -a refresh 'exec fish'
 abbr -a rm 'rm -i'
+
+abbr -a g git
+abbr -a ga 'git add'
