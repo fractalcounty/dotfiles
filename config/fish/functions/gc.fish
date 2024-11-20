@@ -128,7 +128,7 @@ $recent_commits
             -d "$json_payload"
     )
 
-    # validate response
+    # validate response data
     if not echo $response | jq -e . >/dev/null 2>&1
         gum log -l error "Invalid JSON response from API"
         gum log -l debug "Raw response: $response"
@@ -192,11 +192,16 @@ $recent_commits
 
     while true
         # initial satisfaction check
-        if gum confirm --prompt.foreground="$theme_blue" "Are you satisfied with this message?"
-            git commit -m "$commit_message"
-            gum style --foreground "$theme_foreground" --margin "1 0" "Changes committed successfully"
-            return 0
+        if not gum confirm --prompt.foreground="$theme_blue" "Are you satisfied with this message?"
+            or test $status -eq 130 # CTRL+C was pressed
+            gum log -l warn "Commit aborted"
+            return 1
         end
+
+        # if satisfied, commit
+        git commit -m "$commit_message"
+        gum style --foreground "$theme_foreground" --margin "1 0" "Changes committed successfully"
+        return 0
 
         # if not satisfied, show edit menu
         set -l choice (gum choose --header "What would you like to do?" \
