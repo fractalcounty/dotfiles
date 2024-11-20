@@ -191,22 +191,33 @@ $recent_commits
     gum log -l debug "Full commit message: $commit_message"
 
     while true
-        # initial satisfaction check
-        if not gum confirm --prompt.foreground="$theme_blue" "Are you satisfied with this message?"
-            or test $status -eq 130 # CTRL+C was pressed
+        # initial satisfaction check - handle CTRL+C but allow "No" to continue to menu
+        set -l satisfied (gum confirm --prompt.foreground="$theme_blue" "Are you satisfied with this message?")
+        set -l status_code $status
+
+        # If CTRL+C was pressed (status 130), abort
+        if test $status_code -eq 130
             gum log -l warn "Commit aborted"
             return 1
         end
 
-        # if satisfied, commit
-        git commit -m "$commit_message"
-        gum style --foreground "$theme_foreground" --margin "1 0" "Changes committed successfully"
-        return 0
+        # If satisfied (status 0), commit and exit
+        if test $status_code -eq 0
+            git commit -m "$commit_message"
+            gum style --foreground "$theme_foreground" --margin "1 0" "Changes committed successfully"
+            return 0
+        end
 
-        # if not satisfied, show edit menu
+        # If not satisfied (status 1), show edit menu
         set -l choice (gum choose --header "What would you like to do?" \
             --cursor.foreground="$theme_blue" \
             "Edit" "Regenerate" "Confirm" "Cancel")
+
+        # Check if CTRL+C was pressed during choose
+        if test $status -eq 130
+            gum log -l warn "Commit aborted"
+            return 1
+        end
 
         switch $choice
             case Edit
