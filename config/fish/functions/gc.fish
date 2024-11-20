@@ -69,6 +69,14 @@ function gc --description "Generate commit message using Claude AI and commit ch
         if not gum confirm --prompt.foreground="$theme_blue" "No staged changes. Stage all changes?"
             return 1
         end
+
+        # Check if there are any changes to stage at all
+        set -l unstaged_changes (git diff --name-only)
+        if test -z "$unstaged_changes"
+            gum log -l error "No changes to commit"
+            return 1
+        end
+
         git add .
         set diff_context (git diff --cached --diff-algorithm=minimal)
     end
