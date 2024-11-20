@@ -1,11 +1,15 @@
-# Move SYSTEM_PROMPT outside the function to make it a script-level constant
-set -g SYSTEM_PROMPT "You are a Git Commit Message Expert, specializing in analyzing git diffs and generating high-quality commit messages following the Conventional Commits format.
+# reference to anthropic API key secret from 1Password
+set -g ANTHROPIC_SECRET_REF "op://Development/Anthropic/macbook"
+
+# system prompt as a script-level constant with role definition and structured format
+set -g SYSTEM_PROMPT "You are a Git Commit Message Expert with years of experience analyzing version control diffs and crafting precise, meaningful commit messages. Your specialty is generating high-quality conventional commit messages that perfectly capture the essence of code changes.
 
 <output_format>
 {
-  \"type\": \"{{type}}\",
-  \"scope\": {{scope}},
-  \"message\": \"{{message}}\"
+  \"analysis\": \"[chain-of-thought reasoning about the changes]\",
+  \"type\": \"[commit type]\",
+  \"scope\": \"[scope or null]\",
+  \"message\": \"[commit message]\"
 }
 </output_format>
 
@@ -32,23 +36,14 @@ set -g SYSTEM_PROMPT "You are a Git Commit Message Expert, specializing in analy
 6. write in lowercase, no period at end
 7. be specific and descriptive yet terse
 8. focus on the actual code changes, not just file names
+9. include chain-of-thought analysis in the analysis field
 </rules>"
 
 function gc --description "Generate commit message using Claude AI and commit changes"
 
-    # constants
-    set -l ANTHROPIC_SECRET_REF "op://Development/Anthropic/macbook"
-
     # check if we're in a git repo
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
         gum log -l error "Not in a git repository"
-        return 1
-    end
-
-    # validate prompt file exists
-    set -l prompt_file "$PROMPTS_DIR/git-commit.txt"
-    if not test -f $prompt_file
-        gum log -l error "Prompt file not found: $prompt_file"
         return 1
     end
 
@@ -81,9 +76,8 @@ function gc --description "Generate commit message using Claude AI and commit ch
     # get recent commits for style reference
     set -l recent_commits (git log -3 --pretty=format:"%B" 2>/dev/null | string collect)
 
-    # read and prepare the prompt
-    set -l base_prompt (cat $prompt_file)
-    set -l full_prompt "You MUST respond with ONLY a valid JSON object matching the output_format, no other text.
+    # prepare the prompt with early diff context and xml tags
+    set -l user_prompt "Analyze this git diff and generate a commit message:
 
 <git_diff>
 $diff_context
@@ -93,25 +87,31 @@ $diff_context
 $recent_commits
 </recent_commits>"
 
-    # Prepare the API call - only use claude-3-5-sonnet-20241022
+    # prepare the api payload with role and prefill
     set -l json_payload (echo '{
         "model": "claude-3-5-sonnet-20241022",
-        "max_tokens": 150,
+        "max_tokens": 1000,
         "temperature": 0.3,
         "system": '(echo $SYSTEM_PROMPT | jq -R -s .)' ,
-        "messages": [{
-            "role": "user",
-            "content": '(echo $full_prompt | jq -R -s .)' 
-        }]
+        "messages": [
+            {
+                "role": "user", 
+                "content": '(echo $user_prompt | jq -R -s .)'
+            },
+            {
+                "role": "assistant",
+                "content": "{\"analysis\":"
+            }
+        ]
     }')
 
-    # Debug the payload
+    # debug logging
     gum log -l debug "API payload: $json_payload"
 
-    # Make the API call with spinner
+    # make the api call with spinner
     set -l response (
         gum spin --spinner.foreground="$theme_blue" \
-                 --title="Generating commit message..." -- \
+            --title="Generating commit message..." -- \
         curl -sS https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
@@ -119,14 +119,14 @@ $recent_commits
             -d "$json_payload"
     )
 
-    # Validate response
+    # validate response
     if not echo $response | jq -e . >/dev/null 2>&1
         gum log -l error "Invalid JSON response from API"
         gum log -l debug "Raw response: $response"
         return 1
     end
 
-    # Extract and parse content
+    # extract and parse content
     set -l content (echo $response | jq -r '.content[0].text // empty' 2>/dev/null)
     if test -z "$content"
         gum log -l error "Empty response from API"
@@ -134,16 +134,26 @@ $recent_commits
         return 1
     end
 
-    # Try to parse as JSON, strip any markdown formatting if present
+    # parse json response - reconstruct the complete JSON by adding back our prefill
     set -l cleaned_content (echo $content | string replace -r '```json\s*' '' | string replace -r '```\s*$' '' | string trim)
-    if not set -l commit_data (echo $cleaned_content | jq -e '.' 2>/dev/null)
+    # Add back the opening brace and analysis field that we prefilled
+    set -l complete_json "{\"analysis\": $cleaned_content"
+
+    if not set -l commit_data (echo $complete_json | jq -e '.' 2>/dev/null)
         gum log -l error "Invalid JSON in response content"
         gum log -l debug "Content: $content"
         gum log -l debug "Cleaned content: $cleaned_content"
+        gum log -l debug "Complete JSON: $complete_json"
         return 1
     end
 
-    # Extract components with validation
+    # debug logging of analysis
+    set -l analysis (echo $commit_data | jq -r '.analysis // empty')
+    if test -n "$analysis"
+        gum log -l debug "Analysis: $analysis"
+    end
+
+    # extract components
     if not set -l type (echo $commit_data | jq -r '.type // empty')
         gum log -l error "Missing commit type"
         return 1
@@ -154,30 +164,68 @@ $recent_commits
         return 1
     end
 
-    # Construct commit message
+    # construct commit message
     set -l commit_message "$type"
     if test -n "$scope" -a "$scope" != null
         set commit_message "$commit_message($scope)"
     end
     set commit_message "$commit_message: $message"
 
-    # Preview the commit message
+    # preview
     echo
     gum style --foreground "$theme_blue" --bold "Generated commit message:"
     echo
     gum style -th code "$commit_message"
     echo
 
-    # Debug logging
+    # debug logging
     gum log -l debug "Full commit message: $commit_message"
-    echo
 
-    # Confirm and commit
-    if gum confirm --prompt.foreground="$theme_blue" "Commit changes with this message?"
-        git commit -m "$commit_message"
-        gum log -l info "Changes committed successfully"
-    else
-        gum log -l info "Commit aborted"
-        return 1
+    while true
+        # initial satisfaction check
+        if gum confirm --prompt.foreground="$theme_blue" "Are you satisfied with this message?"
+            git commit -m "$commit_message"
+            gum style --foreground "$theme_foreground" --margin "1 0" "Changes committed successfully"
+            return 0
+        end
+
+        # if not satisfied, show edit menu
+        set -l choice (gum choose --header "What would you like to do?" \
+            --cursor.foreground="$theme_blue" \
+            "Edit" "Regenerate" "Confirm" "Cancel")
+
+        switch $choice
+            case Edit
+                # edit raw message with validation
+                set -l raw_message (gum input --width 72 \
+                    --header "Edit commit message (type(scope): message):" \
+                    --value "$commit_message")
+
+                # validate against conventional commit format
+                if not string match -qr '^(\w+)(?:\((.*?)\))?: (.+)$' -- $raw_message
+                    gum log -l error "Invalid conventional commit format"
+                    return 1
+                end
+
+                set commit_message $raw_message
+                echo
+                gum style --foreground "$theme_blue" --bold "Updated commit message:"
+                echo
+                gum style -th code "$commit_message"
+                echo
+
+            case Regenerate
+                gc
+                return
+
+            case Confirm
+                git commit -m "$commit_message"
+                gum style --foreground "$theme_foreground" --margin "1 0" "Changes committed successfully"
+                return 0
+
+            case Cancel
+                gum log -l warn "Commit aborted"
+                return 1
+        end
     end
 end
