@@ -3,7 +3,8 @@
     "redhat.vscode-yaml",
     "1Password.op-vscode",
     "naumovs.color-highlight",
-    "EditorConfig.EditorConfig",
-    "bmalehorn.vscode-fish"
+    "bmalehorn.vscode-fish",
+    "tamasfe.even-better-toml",
+    "foxundermoon.shell-format"
   ]
 }

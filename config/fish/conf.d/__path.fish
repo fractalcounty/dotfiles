@@ -1,17 +1,9 @@
 ## gnu coreutils
 fish_add_path -m "$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin"
 
-## node
-# set -gx NODE_PATH "$XDG_DATA_HOME/node/lib/node_modules"; and mkdir -p $NODE_PATH
-# set -gx NPM_CONFIG_USERCONFIG "$XDG_CONFIG_HOME/npm/npmrc"; and mkdir -p "$XDG_CONFIG_HOME/npm"
-# set -gx NPM_CONFIG_PREFIX $XDG_DATA_HOME/npm; and mkdir -p "$NPM_CONFIG_PREFIX/bin/"
-# set -gx NPM_CONFIG_CACHE $XDG_CACHE_HOME/npm; and mkdir -p $NPM_CONFIG_CACHE
-# set -gx NODE_REPL_HISTORY "$XDG_DATA_HOME/node_repl_history"
-# fish_add_path "$NPM_CONFIG_PREFIX/bin"
-
 ## bun
-# set -gx BUN_INSTALL $XDG_DATA_HOME/bun; and mkdir -p "$BUN_INSTALL/bin/"
-# fish_add_path "$BUN_INSTALL/bin"
+set -gx BUN_INSTALL "$XDG_DATA_HOME/bun"; and mkdir -p "$BUN_INSTALL/bin/"
+fish_add_path "$BUN_INSTALL/bin"
 
 ## deno
 set -gx DENO_INSTALL_ROOT $XDG_DATA_HOME/deno/bin; and mkdir -p $DENO_INSTALL_ROOT

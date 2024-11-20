@@ -5,6 +5,7 @@ system:
 symlinks:
   '$REPO_DIR/config/': '$HOME/.config'
   '$REPO_DIR/Brewfile': '$HOME/.Brewfile'
+  '$REPO_DIR/config/ssh/': '$HOME/.ssh'
 ide: 'cursor'
 brew:
   bundle_file: '$HOME/.Brewfile'

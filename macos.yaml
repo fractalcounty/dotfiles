@@ -18,25 +18,17 @@ data:
     mineffect: 'scale'
     show-recents: false
   com.apple.finder:
-    DisableAllAnimations: true
-    AppleShowAllFiles: true
-    AppleShowAllExtensions: true
-    ShowPathbar: true
-    ShowStatusBar: true
-    _FXSortFoldersFirst: true
-    _FXSortFoldersFirstOnDesktop: true
-    _FXShowPosixPathInTitle: true
-    FXEnableExtensionChangeWarning: 'false'
-    WarnOnEmptyTrash: false
-    FXRemoveOldTrashItems: true
-    ShowExternalHardDrivesOnDesktop: true
-    ShowHardDrivesOnDesktop: false
-    ShowRecentTags: false
-    ShowRemovableMediaOnDesktop: true
-    SidebarDevicesSectionDisclosedState: true
-    SidebarPlacesSectionDisclosedState: true
-    SidebarShowingSignedIntoiCloud: true
-    SidebarShowingiCloudDesktop: false
+    DisableAllAnimations: true # disable animations
+    AppleShowAllFiles: true # show hidden files
+    AppleShowAllExtensions: true # show all extensions
+    ShowPathbar: true # show path bar
+    ShowStatusBar: true # show status bar
+    _FXShowPosixPathInTitle: true # show posix path in title
+    FXEnableExtensionChangeWarning: 'false' # disable extension change warning
+    WarnOnEmptyTrash: false # disable warn on empty trash
+    FXPreferredViewStyle: 'clmv' # column view
+    _FXSortFoldersFirst: true # sort folders first
+    FXDefaultSearchScope: 'SCcf' # search current folder
   com.google.Chrome:
     AppleEnableMouseSwipeNavigateWithScrolls: false
   org.m0k.transmission:

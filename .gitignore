@@ -17,6 +17,9 @@
 !/config/btop/
 !/config/btop/**
 
+!/config/curl/
+!/config/curl/**
+
 !/config/1Password/
 !/config/1Password/ssh
 !/config/1Password/ssh/agent.toml

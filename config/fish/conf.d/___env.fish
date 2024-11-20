@@ -35,9 +35,14 @@ set -gx SQLITE_HISTORY $XDG_DATA_HOME/sqlite_history; and mkdir -p $SQLITE_HISTO
 set -gx LESSHISTFILE $XDG_DATA_HOME/lesshst
 set -gx _ZO_DATA_DIR $XDG_DATA_HOME; and mkdir -p $_ZO_DATA_DIR
 set -gx DOCKER_CONFIG $XDG_CONFIG_HOME/docker; and mkdir -p $DOCKER_CONFIG
+set -gx GIT_CONFIG_GLOBAL "$XDG_CONFIG_HOME/git/.gitconfig"
+set -gx GIT_CONFIG_SYSTEM /dev/null # effectively disable git system config
 
 # misc options
 set -gx GIT_PAGER delta
 set -gx BAT_PAGER 'less -R'
 set -gx MICRO_TRUECOLOR 1
 set -gx SSH_AUTH_SOCK "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+set -gx NODE_ENV development
+
+set -gx PROMPTS_DIR "$XDG_CONFIG_HOME/prompts" && mkdir -p $PROMPTS_DIR

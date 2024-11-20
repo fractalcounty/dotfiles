@@ -3,39 +3,56 @@
 
 add_newline = false
 follow_symlinks = true
-format = """$directory$character"""
-right_format = """$all"""
 
-[character] # The name of the module we are configuring is 'character'
+format = """\
+$nix_shell\
+$localip\
+$shlvl\
+$shell\
+$env_var\
+$jobs\
+$sudo\
+$hostname\
+$username\
+$directory\
+$character\
+"""
+
+right_format = """$git_branch$git_status$all"""
+
+[character]
 format = "$symbol "
 success_symbol = ""
 error_symbol = "[ ✗](bold red)"
 
 [directory]
+read_only = "󰌾"
 truncation_length = 2
 fish_style_pwd_dir_length = 4
 use_logical_path = true
 truncate_to_repo = false
 format = '[$path]($style)[$read_only]($read_only_style)'
 home_symbol = '~'
+style = "bold blue"
 
 [git_branch]
 format = '[$symbol$branch(:$remote_branch)]($style) '
+symbol = " "
 
 [git_status]
-format = '([$all_status$ahead_behind]($style) )'
-ahead = '⇡${count}'
-diverged = '⇕⇡${ahead_count}⇣${behind_count}'
-behind = '⇣${count}'
-
-[hostname]
-format = '[$ssh_symbol$hostname]($style) '
-
-[docker_context]
-format = '[$symbol$context]($style) '
-
-[nix_shell]
-format = '[$symbol$state( \($name\))]($style) '
+format = '([$ahead_behind $all_status]($style)) '
+conflicted = '󰕚 ' # nf-md-vector_difference
+untracked = ' ' # nf-cod-diff_ignored
+modified = ' ' # nf-cod-diff_modified
+deleted = ' ' # nf-oct-diff_removed
+renamed = ' ' # nf-cod-diff_renamed
+up_to_date = '' # checkmark
+ahead = ' ' # up arrow
+behind = ' ' # down arrow
+diverged = '${ahead_count}${behind_count}'
+stashed = '${count}' # box
+staged = '[++\($count\)](green)'
+style = 'purple dimmed'
 
 [custom.godot]
 command = "fish ~/.config/fish/functions/gd-info.fish"
@@ -45,137 +62,137 @@ detect_folders = [".godot"]
 detect_extensions = [".godot", ".tscn", ".gd", ".tres"]
 when = "fish -c 'gd-find >/dev/null'"
 disabled = false
-symbol = "🤖"
-style = "bold cyan"
+symbol = "󰚩 "
+style = "bold blue"
 
-[bun]
-format = "[$symbol]($style) "
+[c]
+symbol = " "
+format = '[$symbol($version-$name)]($style)  '
 
-[buf]
-format = "[$symbol]($style) "
-
-[cmake]
-format = "[$symbol]($style) "
-
-[cobol]
-format = "[$symbol]($style) "
-
-[crystal]
-format = "[$symbol]($style) "
-
-[daml]
-format = "[$symbol]($style) "
+[conda]
+symbol = " "
+format = '[$symbol$environment]($style)  '
 
 [dart]
-format = "[$symbol]($style) "
+symbol = " "
+format = '[$symbol($version)]($style)  '
 
-[deno]
-format = "[$symbol]($style) "
-
-[dotnet]
-format = "[$symbol(🎯 $tfm )]($style) "
-
-[elixir]
-format = '[$symbol]($style) '
-
-[elm]
-format = '[$symbol]($style) '
-
-[erlang]
-format = '[$symbol]($style) '
-
-[fennel]
-format = '[$symbol]($style) '
-
-[gleam]
-format = '[$symbol]($style) '
+[docker_context]
+symbol = " "
+format = '[$symbol$context]($style)  '
 
 [golang]
-format = '[$symbol]($style) '
+symbol = " "
+format = '[$symbol($version)]($style)  '
 
-[gradle]
-format = '[$symbol]($style) '
-
-[haxe]
-format = '[$symbol]($style) '
-
-[helm]
-format = '[$symbol]($style) '
-
-[java]
-format = '[$symbol]($style) '
-
-[julia]
-format = '[$symbol]($style) '
-
-[kotlin]
-format = '[$symbol]($style) '
+[hostname]
+ssh_symbol = " "
 
 [lua]
-format = '[$symbol]($style) '
+symbol = " "
+format = '[$symbol($version)]($style)  '
 
-[meson]
-format = '[$symbol]($style) '
+[memory_usage]
+symbol = "󰍛 "
+format = '$symbol[$ram( | $swap)]($style)  '
 
-[nim]
-format = '[$symbol]($style) '
+[nix_shell]
+symbol = " "
+format = '[$symbol$state( ($name) )]($style)  '
 
 [nodejs]
-format = '[$symbol]($style) '
+symbol = " "
+format = '[$symbol($version)]($style)  '
 
-[ocaml]
-format = '[$symbol(\($switch_indicator$switch_name\) )]($style) '
-
-[opa]
-format = '[$symbol]($style) '
-
-[perl]
-format = '[$symbol]($style) '
-
-[php]
-format = '[$symbol]($style) '
-
-[pulumi]
-format = '[$symbol$stack]($style) '
-
-[purescript]
-format = '[$symbol]($style) '
+[package]
+symbol = "󰏗 "
+format = '[$symbol$version]($style)  '
+disabled = true
 
 [python]
-format = '[$symbol]($style) '
-
-[quarto]
-format = '[$symbol]($style) '
-
-[raku]
-format = '[$symbol]($style) '
-
-[red]
-format = '[$symbol]($style) '
-
-[rlang]
-format = '[$symbol]($style) '
+symbol = " "
+format = '[$symbol$pyenv_prefix($version)( ($virtualenv) )]($style) '
 
 [ruby]
-format = '[$symbol]($style) '
+symbol = " "
+format = '[$symbol($version)]($style)  '
 
 [rust]
-format = '[$symbol]($style) '
-
-[solidity]
-format = '[$symbol]($style) '
-
-[typst]
-format = '[$symbol]($style) '
+symbol = "󱘗 "
+format = '[$symbol($version)]($style)  '
 
 [swift]
-format = '[$symbol]($style) '
-
-[vagrant]
-format = '[$symbol]($style) '
-
-[vlang]
-format = '[$symbol]($style) '
+symbol = " "
+format = '[$symbol($version)]($style)  '
 
 [zig]
-format = '[$symbol]($style) '
+symbol = " "
+format = '[$symbol($version)]($style)  '
+
+[cmd_duration]
+format = '[⏱ $duration]($style)  '
+
+[bun]
+format = '[$symbol($version)]($style)  '
+symbol = "󰦌 "
+
+[cmake]
+format = '[$symbol($version)]($style) '
+
+[deno]
+format = '[$symbol($version)]($style) '
+symbol = '🦕 '
+
+[os]
+format = '[$symbol]($style)  '
+
+[time]
+format = '[$time]($style)  '
+
+[username]
+format = '[$user]($style)  '
+
+[os.symbols]
+Alpaquita = " "
+Alpine = " "
+AlmaLinux = " "
+Amazon = " "
+Android = " "
+Arch = " "
+Artix = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "󰛓 "
+Gentoo = " "
+HardenedBSD = "󰞌 "
+Illumos = "󰈸 "
+Kali = " "
+Linux = " "
+Mabox = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+OpenBSD = "󰈺 "
+openSUSE = " "
+OracleLinux = "󰌷 "
+Pop = " "
+Raspbian = " "
+Redhat = " "
+RedHatEnterprise = " "
+RockyLinux = " "
+Redox = "󰀘 "
+Solus = "󰠳 "
+SUSE = " "
+Ubuntu = " "
+Unknown = " "
+Void = " "
+Windows = "󰍲 "

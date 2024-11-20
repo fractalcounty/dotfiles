@@ -1,0 +1,79 @@
+[alias]
+staged = "diff --staged"
+
+[commit]
+gpgsign = true
+
+[core]
+editor = "$VISUAL"
+autocrlf = input
+whitespace = trailing-space,space-before-tab
+pager = "delta --features=interactive"
+
+[credential]
+helper = cache --timeout=3600
+
+[delta]
+navigate = true
+features = laramie
+true-color = always
+hyperlinks = true
+diff-so-fancy = true
+detect-dark-light = always
+hyperlinks-file-link-format = "$VISUAL://file/{path}:{line}"
+
+[diff]
+colorMoved = zebra
+algorithm = histogram
+
+[fetch]
+prune = true
+
+[filter "lfs"]
+clean = git-lfs clean -- %f
+smudge = git-lfs smudge -- %f
+process = git-lfs filter-process
+required = true
+
+[gpg]
+format = ssh
+
+[gpg "ssh"]
+program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+
+[help]
+autocorrect = 10
+
+[include]
+path = "$XDG_CONFIG_HOME/git/themes.gitconfig"
+
+[init]
+defaultBranch = main
+
+[interactive]
+diffFilter = "delta --features=interactive"
+
+[merge]
+conflictStyle = diff3
+
+[push]
+autoSetupRemote = true
+followTags = true
+
+[pull]
+rebase = true
+
+[stash]
+showPatch = true
+
+[transfer]
+fsckObjects = true
+
+[url "git@github.com:"]
+insteadOf = "https://github.com/"
+insteadOf = "gh:"
+
+[user]
+email = chip@fractalcounty.com
+name = fractalcounty
+signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJXQui6phz7OAWsq1PRvJrhJSuMnsYQ6u5kfCIfvU3xU

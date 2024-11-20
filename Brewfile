@@ -1,6 +1,9 @@
 #
 # chip's global brewfile
 #
+# descriptions of apps that replace, augment, or depend on
+# other apps are formatted like '<original>: <description>'
+#
 
 # ===============================
 # 🚰 taps
@@ -10,11 +13,11 @@
 tap "domt4/autoupdate"
 brew "autoupdate"
 
-# macOS settings setter
+# macOS settings manager
 tap "dsully/tap"
 brew "macos-defaults"
 
-# pretty CLI utilities
+# shell beautification tools
 tap "charmbracelet/tap"
 brew "wishlist"
 brew "gum"
@@ -23,14 +26,14 @@ brew "gum"
 # 🧪 formulae
 # ===============================
 
-## shell & scripting
-brew 'fish' # shell
+## shell
+brew 'fish' # main shell
 brew 'starship' # prompt
-brew 'atuin' # history
-brew 'yq' # yaml processor
-brew 'groff' # text formatting
+brew 'atuin' # shell history
+brew 'shellcheck' # bash linter
+brew 'shfmt' # bash formatter
 
-## replacements
+## replacements / coreutils
 brew 'bat' # cat: file viewer
 brew 'fd' # find: file search
 brew 'eza' # ls: dir listing
@@ -42,38 +45,44 @@ brew 'btop' # htop: resource monitor
 brew 'micro' # nano: text editor
 brew 'ripgrep' # grep: fast search
 brew 'coreutils' # gnu: basic commands
+brew 'macchina' # neofetch: system info
 
-## utilities
-brew 'chafa' # image viewer
-brew 'fswatch' # file change monitor
-brew 'fzf' # fuzzy finder
-brew 'macchina' # system info
+## version control
+brew 'git' # source control
+brew 'git-lfs' # git: large file storage
+brew 'gh' # git: github cli
+brew 'act' # gh: github actions
 brew 'less' # pager
-brew 'git-delta' # diff viewer
-brew 'folderify' # custom folder icons
-brew 'gnupg' # encryption
-brew 'pinentry-mac' # auth dialog
-brew 'nvim' # text editor
-brew 'trash' # safe delete
-brew 'iperf3' # network testing
+brew 'git-delta' # less: diff viewer
+
+## languages
+brew 'rustup' # rust
+brew 'python' # python
+brew 'pipx' # python 
+brew 'bun' # typescript
+brew 'yq' # yaml
+
+## networking
 brew 'openssh' # secure shell
-brew 'grc' # colorizer
+brew 'iperf3' # benchmark tool
+brew 'nmap' # thorough port scanner
+brew 'caddy' # web server/reverse proxy
 
 ## multimedia
 brew 'imagemagick' # image processing
 brew 'ffmpeg' # video processing
 brew 'yt-dlp' # media downloader
 brew 'freetype' # font toolkit
+brew 'chafa' # image viewer
 
-## development
-brew 'git' # version control
-brew 'git-lfs' # large file storage
-brew 'gh' # github cli
-brew 'act' # github actions
-brew 'rustup' # rust
-brew 'caddy' # web server/reverse proxy
-brew 'python' # python
-brew 'pipx' # python package manager 
+## other
+brew 'fswatch' # file change monitor
+brew 'fzf' # fuzzy finder
+brew 'folderify' # custom folder icons
+brew 'gnupg' # encryption
+brew 'pinentry-mac' # auth dialog
+brew 'trash' # safe delete
+brew 'grc' # colorizer
 
 # ===============================
 # 🛢️ casks
@@ -83,28 +92,23 @@ brew 'pipx' # python package manager 
 cask 'font-commit-mono-nerd-font'
 cask 'font-comic-mono'
 
-## utilities
+## replacements / system
+cask 'raycast' # spotlight: launcher
+cask 'alt-tab' # stage manager: window switcher
+cask 'betterdisplay' # settings: display
+cask 'iina' # quicktime: video player
+cask 'obs' # quicktime: screen recorder
+cask 'cleanshot' # screenshots
 cask 'keka' # file archiver
-cask 'cleanshot' # screenshot tool
-cask 'raycast' # spotlight replacement
-cask 'betterdisplay' # display mgmt
-cask 'alt-tab' # window switcher
 cask 'transmission' # torrent client
-cask 'obs' # screen recorder
-cask 'iina' # video player
 
 ## productivity
-cask 'cursor' # ai-powered ide
-cask 'msty' # llm frontend
-cask 'wezterm@nightly' # main terminal
-cask 'warp' # alt. terminal
+cask 'cursor' # text editor / main IDE
+cask 'obsidian' # text editor / markdown
 cask '1password@nightly' # password manager
-cask '1password-cli@beta' # password manager cli
+cask '1password-cli@beta' # 1password: CLI
 cask 'google-chrome' # web browser
-cask 'obsidian' # markdown editor
-cask 'discord' # chat
-cask 'godot' # game engine
-cask 'docker' # containers
+cask 'discord' # chat client
 
 # ===============================
 # 🍎 app store
@@ -112,4 +116,4 @@ cask 'docker' # containers
 
 brew 'mas' # mac app store cli
 mas 'Passepartout, VPN Client', id: 1433648537 # multi-platform vpn client
-mas 'Yoink - Better Drag and Drop', id: 457622435 # drag-and-drop
+mas 'Yoink - Better Drag and Drop', id: 457622435 # file pocket thing
