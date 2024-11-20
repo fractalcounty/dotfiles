@@ -66,6 +66,7 @@ function gc --description "Generate commit message using Claude AI and commit ch
     # check staged changes
     set -l diff_context (git diff --cached --diff-algorithm=minimal)
     if test -z "$diff_context"
+        echo
         if not gum confirm --prompt.foreground="$theme_blue" "No staged changes. Stage all changes?"
             return 1
         end
