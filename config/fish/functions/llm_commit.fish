@@ -76,14 +76,14 @@ set -g FAT_PROMPT "You are a Git Commit Message Expert with years of experience 
 <rules>
 1. return ONLY a valid json object - no other text
 2. message must be under 72 characters
-3. use scope ONLY if changes affect a specific component
-4. if changes are broad/all-encompassing, set scope to null
-5. use imperative mood (\"add\" not \"added\")
-6. write in lowercase, no period at end
-7. be specific and descriptive yet terse
-8. focus on the actual code changes, not just file names
-9. only include chain-of-thought analysis in the analysis field
-10. never include filenames in the scope if a scope is appropriate
+3. ALWAYS set scope to null unless changes affect a very specific component
+4. NEVER include file extensions in the scope (e.g \".ts\" or \".md\")
+5. if changes are broad/all-encompassing, set scope to null
+6. use imperative mood (\"add\" not \"added\")
+7. write in lowercase, no period at end
+8. be specific and descriptive yet terse
+9. focus on the actual code changes, not just file names
+10. only include chain-of-thought analysis in the analysis field
 </rules>"
 
 # lean mode system prompt (terse, no chain-of-thought reasoning)
