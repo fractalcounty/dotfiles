@@ -18,8 +18,8 @@ set -g TEMPERATURE 0.3
 set -g DEFAULT_MODE fat
 
 ## anthropic models to use (https://docs.anthropic.com/en/docs/about-claude/models)
-set -g FAT_MODEL claude-3-5-sonnet-latest # model to use for fat mode
-set -g LEAN_MODEL claude-3-5-haiku-20241022 # model to use for lean mode
+set -g FAT_MODEL claude-3-5-sonnet-latest
+set -g LEAN_MODEL claude-3-5-haiku-20241022
 
 ## max amount of tokens to return in the LLM response
 set -g FAT_MAX_TOKENS 300
@@ -165,9 +165,44 @@ $recent_commits
 </recent_commits>"
 
     # select model, max tokens and prompt based on mode
-    set -l model $$mode"_MODEL"
-    set -l max_tokens $$mode"_MAX_TOKENS"
-    set -l prompt $$mode"_PROMPT"
+    # convert mode to uppercase for variable names
+    set -l mode_upper (string upper $mode)
+    set -l model_var $mode_upper"_MODEL"
+    set -l max_tokens_var $mode_upper"_MAX_TOKENS"
+    set -l prompt_var $mode_upper"_PROMPT"
+
+    # validate variables exist
+    if not set -q $model_var
+        gum log -l error "Model variable $model_var not found"
+        return 1
+    end
+    if not set -q $max_tokens_var
+        gum log -l error "Max tokens variable $max_tokens_var not found"
+        return 1
+    end
+    if not set -q $prompt_var
+        gum log -l error "Prompt variable $prompt_var not found"
+        return 1
+    end
+
+    # get values using set -q to properly handle scope
+    set -l model (string replace -r '^.*$' "$$model_var" "")
+    set -l max_tokens (string replace -r '^.*$' "$$max_tokens_var" "")
+    set -l prompt (string replace -r '^.*$' "$$prompt_var" "")
+
+    # debug logging to verify values
+    gum log -l debug "Mode: $mode"
+    gum log -l debug "Model: $model"
+    gum log -l debug "Max tokens: $max_tokens"
+
+    # validate mode-specific settings exist
+    if test -z "$model" -o -z "$max_tokens" -o -z "$prompt"
+        gum log -l error "Missing required settings for $mode mode"
+        gum log -l debug "Model: $model"
+        gum log -l debug "Max tokens: $max_tokens"
+        gum log -l debug "Prompt: $prompt"
+        return 1
+    end
 
     # prepare the api payload with role and prefill
     set -l json_payload (echo '{
@@ -191,6 +226,12 @@ $recent_commits
     gum log -l debug "Using $mode mode with model $model"
     gum log -l debug "API payload: $json_payload"
 
+    # after preparing json_payload but before making the api call:
+    if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
+        gum log -l debug "API request payload:"
+        echo $json_payload | jq '.' | gum style --foreground "#a9b1d6" --border rounded --padding 1 --width 80
+    end
+
     # make the api call with spinner
     set -l response (
         gum spin \
@@ -201,6 +242,12 @@ $recent_commits
             -H "anthropic-version: 2023-06-01" \
             -d "$json_payload"
     )
+
+    # after receiving the response but before parsing:
+    if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
+        gum log -l debug "API response:"
+        echo $response | jq '.' | gum style --foreground "#a9b1d6" --border rounded --padding 1 --width 80
+    end
 
     # validate response data
     if not echo $response | jq -e . >/dev/null 2>&1
