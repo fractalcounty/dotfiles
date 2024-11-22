@@ -284,6 +284,7 @@ function llm_commit
             end
         else
             gum log -l error "No changes to commit"
+            echo
             return 1
         end
     end
