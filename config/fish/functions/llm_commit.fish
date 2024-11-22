@@ -1,31 +1,47 @@
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
+#                         llm_commit:                          #
+#     a llm-powered conventional commit message generator      #
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
+
+## REQUIREMENTS:
+# - 'gum' (https://github.com/charmbracelet/gum, 'brew install gum')
+# - 'jq' (https://github.com/stedolan/jq, 'brew install jq')
+
+## INSTALLATION:
+# 1. Navigate to your fish functions directory, i.e `cd ~/.config/fish/functions`
+# 2. Clone this script with `git clone https://github.com/jdx/llm_commit.fish`
+# 3. Get an Anthropic API key (https://console.anthropic.com/settings/keys)
+# 4. Set the ANTHROPIC_API_KEY env var securely in your environment, i.e w/ a password manager
+#    (or directly in this script with 'set -gx ANTHROPIC_API_KEY <key>' if you're lazy like me)
+# 5. Reccomended: add 'gc' alias for convenience, you can move this to your fish config if you want
+abbr -a gc llm_commit
+
+## USAGE:
+# - 'gc': generate a commit message using default mode ('fat', can be changed via 'DEFAULT_MODE' below)
+# - 'gc [-f|--fat]': use fat mode (higher quality, slower, more expensive)
+# - 'gc [-l|--lean]': use lean mode (decent quality, no chain-of-thought reasoning, faster, cheaper)
+
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
 #          constants (global config)           #
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
 
-## recommended: abbr for convenience
-# abbr -a gc llm_commit
+## you can also set these in your environment if you prefer (will take precedence over below)
 
-## required: anthropic API secret key (https://console.anthropic.com/settings/keys)
-## can be set here or securely in your environment (i.e through password manager)
-# set -gx ANTHROPIC_API_KEY <value>
+# temperature for the LLM response (0.0 to 1.0)
+set -q TEMPERATURE; or set -g TEMPERATURE 0.3
 
-## temperature for the LLM response (0.0 to 1.0)
-set -g TEMPERATURE 0.3
+# required: default mode to use when 'gc' is called without specifying mode (--fat/-f or --lean/-l)
+set -q DEFAULT_MODE; or set -g DEFAULT_MODE fat
 
-## required: default mode to use (overriden with --fat/-f or --lean/-l)
-# fat - higher quality, slower, higher cost
-# lean - faster, cheaper, lower quality (no chain-of-thought)
-set -g DEFAULT_MODE fat
+# anthropic models to use for each mode (https://docs.anthropic.com/en/docs/about-claude/models)
+set -q FAT_MODEL; or set -g FAT_MODEL claude-3-5-sonnet-latest
+set -q LEAN_MODEL; or set -g LEAN_MODEL claude-3-5-haiku-20241022
 
-## anthropic models to use (https://docs.anthropic.com/en/docs/about-claude/models)
-set -g FAT_MODEL claude-3-5-sonnet-latest
-set -g LEAN_MODEL claude-3-5-haiku-20241022
+# max amount of tokens the LLM can return in each mode
+set -q FAT_MAX_TOKENS; or set -g FAT_MAX_TOKENS 300
+set -q LEAN_MAX_TOKENS; or set -g LEAN_MAX_TOKENS 100
 
-## max amount of tokens to return in the LLM response
-set -g FAT_MAX_TOKENS 300
-set -g LEAN_MAX_TOKENS 100
-
-## system prompt as a script-level constant with role definition and structured format
+# fat mode system prompt (uses chain-of-thought reasoning)
 set -g FAT_PROMPT "You are a Git Commit Message Expert with years of experience analyzing version control diffs and crafting precise, meaningful commit messages. Your specialty is generating high-quality conventional commit messages within a JSON object that perfectly capture the essence of code changes.
 
 <output_format>
@@ -63,6 +79,7 @@ set -g FAT_PROMPT "You are a Git Commit Message Expert with years of experience 
 9. include chain-of-thought analysis in the analysis field
 </rules>"
 
+# lean mode system prompt (terse, no chain-of-thought reasoning)
 set -g LEAN_PROMPT "You are tasked with analyzing git diffs and generating high-quality conventional commit messages in the form of a JSON object.
 
 <output_format>
@@ -82,6 +99,10 @@ set -g LEAN_PROMPT "You are tasked with analyzing git diffs and generating high-
 5. use imperative mood (\"add\" not \"added\") in all-lowercase without punctuation
 </rules>"
 
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
+#            rest of the script lol            #
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
+
 function _help
     echo
     gum format -- "# llm_commit - ai-powered conventional commit message generator"
@@ -99,7 +120,6 @@ end
 
 function llm_commit --description "Generate a git commit message using Claude AI and commit changes"
 
-    # parse arguments for mode selection
     set -l mode $DEFAULT_MODE
     set -l remaining_args
 
@@ -117,21 +137,16 @@ function llm_commit --description "Generate a git commit message using Claude AI
         end
     end
 
-    # check if we're in a git repo
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
         gum log -l error "Not in a git repository"
         return 1
     end
 
-    # simplified api key check
     if not set -q ANTHROPIC_API_KEY
         gum log -l error "ANTHROPIC_API_KEY environment variable is not set"
         return 1
-    else
-        gum log -l debug "Using ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY"
     end
 
-    # check staged changes
     set -l diff_context (git diff --cached --diff-algorithm=minimal)
     if test -z "$diff_context"
         echo
@@ -139,7 +154,6 @@ function llm_commit --description "Generate a git commit message using Claude AI
             return 1
         end
 
-        # Check if there are any changes to stage at all
         set -l unstaged_changes (git diff --name-only)
         if test -z "$unstaged_changes"
             gum log -l error "No changes to commit"
@@ -153,7 +167,6 @@ function llm_commit --description "Generate a git commit message using Claude AI
     # get recent commits for style reference
     set -l recent_commits (git log -3 --pretty=format:"%B" 2>/dev/null | string collect)
 
-    # prepare the prompt with early diff context and xml tags
     set -l user_prompt "Analyze this git diff and generate a commit message:
 
 <git_diff>
@@ -164,14 +177,11 @@ $diff_context
 $recent_commits
 </recent_commits>"
 
-    # select model, max tokens and prompt based on mode
-    # convert mode to uppercase for variable names
     set -l mode_upper (string upper $mode)
     set -l model_var $mode_upper"_MODEL"
     set -l max_tokens_var $mode_upper"_MAX_TOKENS"
     set -l prompt_var $mode_upper"_PROMPT"
 
-    # validate variables exist
     if not set -q $model_var
         gum log -l error "Model variable $model_var not found"
         return 1
@@ -185,17 +195,10 @@ $recent_commits
         return 1
     end
 
-    # get values using set -q to properly handle scope
     set -l model (string replace -r '^.*$' "$$model_var" "")
     set -l max_tokens (string replace -r '^.*$' "$$max_tokens_var" "")
     set -l prompt (string replace -r '^.*$' "$$prompt_var" "")
 
-    # debug logging to verify values
-    gum log -l debug "Mode: $mode"
-    gum log -l debug "Model: $model"
-    gum log -l debug "Max tokens: $max_tokens"
-
-    # validate mode-specific settings exist
     if test -z "$model" -o -z "$max_tokens" -o -z "$prompt"
         gum log -l error "Missing required settings for $mode mode"
         gum log -l debug "Model: $model"
@@ -204,7 +207,6 @@ $recent_commits
         return 1
     end
 
-    # prepare the api payload with role and prefill
     set -l json_payload (echo '{
         "model": "'(echo $model)'",
         "max_tokens": '(echo $max_tokens)',
@@ -222,17 +224,8 @@ $recent_commits
         ]
     }')
 
-    # debug logging
     gum log -l debug "Using $mode mode with model $model"
-    gum log -l debug "API payload: $json_payload"
 
-    # after preparing json_payload but before making the api call:
-    if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
-        gum log -l debug "API request payload:"
-        echo $json_payload | jq '.' | gum style --foreground "#a9b1d6" --border rounded --padding 1 --width 80
-    end
-
-    # make the api call with spinner
     set -l response (
         gum spin \
             --title="Generating commit message..." -- \
@@ -243,30 +236,25 @@ $recent_commits
             -d "$json_payload"
     )
 
-    # after receiving the response but before parsing:
     if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
         gum log -l debug "API response:"
-        echo $response | jq '.' | gum style --foreground "#a9b1d6" --border rounded --padding 1 --width 80
+        printf '%s' $response | jq --color-output '.' | gum style --foreground "#a9b1d6" --padding 1 --width 80 --border=rounded
     end
 
-    # validate response data
     if not echo $response | jq -e . >/dev/null 2>&1
         gum log -l error "Invalid JSON response from API"
-        gum log -l debug "Raw response: $response"
         return 1
     end
 
-    # extract and parse content
     set -l content (echo $response | jq -r '.content[0].text // empty' 2>/dev/null)
     if test -z "$content"
         gum log -l error "Empty response from API"
-        gum log -l debug "Raw response: $response"
         return 1
     end
 
-    # parse json response - reconstruct the complete JSON by adding back our prefill
+    # reconstruct the complete JSON by adding back prefill
     set -l cleaned_content (echo $content | string replace -r '```json\s*' '' | string replace -r '```\s*$' '' | string trim)
-    # Add back the opening brace and analysis field that we prefilled
+    # add back the opening brace and prefilled analysis field
     set -l complete_json "{\"analysis\": $cleaned_content"
 
     if not set -l commit_data (echo $complete_json | jq -e '.' 2>/dev/null)
@@ -277,13 +265,6 @@ $recent_commits
         return 1
     end
 
-    # debug logging of analysis
-    set -l analysis (echo $commit_data | jq -r '.analysis // empty')
-    if test -n "$analysis"
-        gum log -l debug "Analysis: $analysis"
-    end
-
-    # extract components
     if not set -l type (echo $commit_data | jq -r '.type // empty')
         gum log -l error "Missing commit type"
         return 1
@@ -294,83 +275,89 @@ $recent_commits
         return 1
     end
 
-    # construct commit message
     set -l commit_message "$type"
     if test -n "$scope" -a "$scope" != null
         set commit_message "$commit_message($scope)"
     end
     set commit_message "$commit_message: $message"
 
-    # preview
     echo
-    gum style "Generated commit message:"
+    gum style --foreground "#7aa2f7" --bold "Generated commit message:"
     echo
     gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
     echo
 
-    # debug logging
-    gum log -l debug "Full commit message: $commit_message"
-
+    # main satisfaction loop
     while true
-        # initial satisfaction check - handle CTRL+C but allow "No" to continue to menu
-        set -l satisfied (gum confirm "Are you satisfied with this message?")
-        set -l status_code $status
+        if not gum confirm "Are you satisfied with this message?"
+            # user pressed 'No' or CTRL+C
+            if test $status -eq 130 # CTRL+C was pressed
+                gum log -l warn "Commit aborted"
+                return 1
+            end
 
-        # If CTRL+C was pressed (status 130), abort
-        if test $status_code -eq 130
-            gum log -l warn "Commit aborted"
-            return 1
-        end
+            # user pressed 'No', show menu
+            set -l choice
+            while test -z "$choice"
+                # keep trying until we get a valid choice or CTRL+C
+                if not set choice (gum choose --header "What would you like to do?" \
+                    "Edit" "Regenerate" "Submit" "Cancel")
+                    if test $status -eq 130
+                        # CTRL+C pressed in choose menu, abort completely
+                        gum log -l warn "Commit aborted"
+                        return 1
+                    end
+                end
+            end
 
-        # If satisfied (status 0), commit and exit
-        if test $status_code -eq 0
+            switch $choice
+                case Edit
+                    # edit raw message with validation
+                    while true
+                        set -l raw_message (gum input --width 72 \
+                            --header "Edit commit message - type(scope): message:" \
+                            --value "$commit_message")
+
+                        # CTRL+C pressed while editing
+                        if test $status -eq 130
+                            break # exit edit loop, return to satisfaction prompt
+                        end
+
+                        # validate against conventional commit format
+                        if not string match -qr '^(\w+)(?:\((.*?)\))?: (.+)$' -- $raw_message
+                            gum log -l error "Invalid conventional commit format"
+                            continue # stay in edit loop
+                        end
+
+                        # valid message, update and return to satisfaction prompt
+                        set commit_message $raw_message
+                        echo
+                        gum style --bold "Updated commit message:"
+                        echo
+                        gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
+                        echo
+                        break # exit edit loop
+                    end
+
+                case Regenerate
+                    # recursively call gc to regenerate
+                    gc
+                    return
+
+                case Submit
+                    git commit -m "$commit_message"
+                    gum style --foreground "#a9b1d6" --margin "1 0" "Changes committed successfully"
+                    return 0
+
+                case Cancel
+                    # return to satisfaction prompt
+                    continue
+            end
+        else
+            # user pressed 'Yes'
             git commit -m "$commit_message"
             gum style --foreground "#a9b1d6" --margin "1 0" "Changes committed successfully"
             return 0
-        end
-
-        # If not satisfied (status 1), show edit menu
-        set -l choice (gum choose --header "What would you like to do?" \
-            "Edit" "Regenerate" "Submit" "Cancel")
-
-        # Check if CTRL+C was pressed during choose
-        if test $status -eq 130
-            gum log -l warn "Commit aborted"
-            return 1
-        end
-
-        switch $choice
-            case Edit
-                # edit raw message with validation
-                set -l raw_message (gum input --width 72 \
-                    --header "Edit commit message - type(scope): message:" \
-                    --value "$commit_message")
-
-                # validate against conventional commit format
-                if not string match -qr '^(\w+)(?:\((.*?)\))?: (.+)$' -- $raw_message
-                    gum log -l error "Invalid conventional commit format"
-                    return 1
-                end
-
-                set commit_message $raw_message
-                echo
-                gum style --bold "Updated commit message:"
-                echo
-                gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
-                echo
-
-            case Regenerate
-                gc
-                return
-
-            case Submit
-                git commit -m "$commit_message"
-                gum style --foreground "#a9b1d6" --margin "1 0" "Changes committed successfully"
-                return 0
-
-            case Cancel
-                gum log -l warn "Commit aborted"
-                return 1
         end
     end
 end
