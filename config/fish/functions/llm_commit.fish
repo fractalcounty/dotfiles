@@ -102,7 +102,6 @@ set -g LEAN_PROMPT "You are tasked with analyzing git diffs and generating high-
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
 #            rest of the script lol            #
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
-
 function _help
     echo
     gum format -- "# llm_commit - ai-powered conventional commit message generator"
@@ -126,15 +125,12 @@ function _show_commit_message -a message
     echo
 end
 
-# Add this helper function to handle the API call and response parsing
 function _generate_commit_message -a mode -a temp
-    # Default to standard temperature if not provided
     set -l temperature $temp
     if test -z "$temperature"
         set temperature $TEMPERATURE
     end
 
-    # Get latest diff and commits
     set -l diff_context (git diff --cached --diff-algorithm=minimal)
     set -l recent_commits (git log -3 --pretty=format:"%B" 2>/dev/null | string collect)
 
@@ -148,7 +144,6 @@ $diff_context
 $recent_commits
 </recent_commits>"
 
-    # Get mode-specific settings
     set -l mode_upper (string upper $mode)
     set -l model_var $mode_upper"_MODEL"
     set -l max_tokens_var $mode_upper"_MAX_TOKENS"
@@ -179,7 +174,6 @@ $recent_commits
         ]
     }')
 
-    # Make API call
     set -l response (
         gum spin \
             --title="Generating commit message..." -- \
@@ -190,13 +184,11 @@ $recent_commits
             -d "$json_payload"
     )
 
-    # Debug logging
-    if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
-        gum log -l debug "API response:"
-        printf '%s' $response | jq --color-output '.' | gum style --foreground "#a9b1d6" --padding 1 --width 80 --border=rounded
-    end
+    # if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
+    #     gum log -l debug "API response:"
+    #     printf '%s' $response | jq --color-output '.' | gum style --foreground "#a9b1d6" --padding 1 --width 80 --border=rounded
+    # end
 
-    # parse and validate response
     if not echo $response | jq -e . >/dev/null 2>&1
         gum log -l error "Invalid JSON response from API"
         return 1
@@ -211,13 +203,11 @@ $recent_commits
     set -l cleaned_content (echo $content | string replace -r '```json\s*' '' | string replace -r '```\s*$' '' | string trim)
     set -l complete_json "{\"analysis\": $cleaned_content"
 
-    # Parse commit data
     if not set -l commit_data (echo $complete_json | jq -e '.' 2>/dev/null)
         gum log -l error "Invalid JSON in response content"
         return 1
     end
 
-    # Extract commit components
     if not set -l type (echo $commit_data | jq -r '.type // empty')
         gum log -l error "Missing commit type"
         return 1
@@ -228,7 +218,6 @@ $recent_commits
         return 1
     end
 
-    # Format commit message
     set -l commit_message "$type"
     if test -n "$scope" -a "$scope" != null
         set commit_message "$commit_message($scope)"
@@ -236,7 +225,6 @@ $recent_commits
     echo "$commit_message: $message"
 end
 
-# Then modify the main function to use the helper
 function llm_commit
     set -l mode $DEFAULT_MODE
     set -l remaining_args
@@ -265,15 +253,12 @@ function llm_commit
         return 1
     end
 
-    # check for staged changes and handle unstaged files
     if test -z "$(git diff --cached --name-only)"
-        # check if there are any unstaged changes
         if test -n "$(git status --porcelain)"
             gum log -l warn "No staged changes to commit"
             echo
             if gum confirm "Would you like to add all files to the index?"
                 git add .
-                # verify staging worked and there are actual changes
                 if test -z "$(git diff --cached --name-only)"
                     gum log -l error "No staged files contain any changes"
                     return 1
@@ -289,11 +274,9 @@ function llm_commit
         end
     end
 
-    # Initial generation with default temperature
     set -l commit_message (_generate_commit_message $mode)
     or return 1
 
-    # initial display of commit message
     _show_commit_message "$commit_message"
 
     while true
@@ -308,37 +291,31 @@ function llm_commit
                 return 0
 
             case Edit
-                # capture status and output separately to handle interrupts properly
                 set -l raw_message (gum input --width 72 \
                     --header "Edit commit message - type(scope): message:" \
                     --value "$commit_message")
                 set -l input_status $status
 
-                # handle interrupt (ctrl+c)
                 if test $input_status -eq 130
                     continue
                 end
 
-                # handle other errors
                 if test $input_status -ne 0
                     gum log -l error "Failed to get input"
                     continue
                 end
 
-                # validate commit format
                 if not string match -qr '^(\w+)(?:\((.*?)\))?: (.+)$' -- $raw_message
                     gum log -l error "Invalid conventional commit format"
                     continue
                 end
 
-                # update the message and clear screen before showing updated version
                 set commit_message $raw_message
                 clear
                 _show_commit_message "$commit_message"
 
             case Regenerate
                 clear
-                # Use higher temperature (0.7) for regeneration to encourage variation
                 set -l new_message (_generate_commit_message $mode 0.7)
                 if test $status -eq 0
                     set commit_message $new_message
