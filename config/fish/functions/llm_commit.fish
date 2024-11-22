@@ -159,10 +159,42 @@ function _generate_commit_message -a mode -a temp
         set temperature $TEMPERATURE
     end
 
-    set -l diff_context (git diff --cached --diff-algorithm=minimal)
-    set -l recent_commits (git log -3 --pretty=format:"%B" 2>/dev/null | string collect)
+    # Optimize diff context based on mode
+    set -l diff_context
+    if test "$mode" = fat
+        # For fat mode: Include more context but filter noise
+        set diff_context (git diff --cached \
+            --diff-algorithm=histogram \
+            --function-context \
+            --unified=3 \
+            --ignore-space-change \
+            --ignore-blank-lines \
+            --color=never \
+            | string replace -r '^index [0-9a-f]{7}\.\.[0-9a-f]{7}.*$' '' \
+            | string replace -r '^diff --git.*$' '' \
+            | string collect)
+    else
+        # For lean mode: Minimal but essential changes
+        set diff_context (git diff --cached \
+            --diff-algorithm=minimal \
+            --unified=1 \
+            --ignore-all-space \
+            --function-context \
+            --color=never \
+            | string replace -r '^index [0-9a-f]{7}\.\.[0-9a-f]{7}.*$' '' \
+            | string replace -r '^diff --git.*$' '' \
+            | string collect)
+    end
 
-    set -l user_prompt "Analyze this git diff and generate a commit message:
+    # Add git status summary for better context
+    set -l status_summary (git status --porcelain=v2 | string collect)
+
+    # Modify user prompt to include status and optimize context
+    set -l user_prompt "Analyze these git changes and generate a commit message:
+
+<git_status>
+$status_summary
+</git_status>
 
 <git_diff>
 $diff_context
