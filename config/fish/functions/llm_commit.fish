@@ -287,77 +287,42 @@ $recent_commits
     gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
     echo
 
-    # main satisfaction loop
     while true
-        if not gum confirm "Are you satisfied with this message?"
-            # user pressed 'No' or CTRL+C
-            if test $status -eq 130 # CTRL+C was pressed
+        set -l choice (gum choose --header "What would you like to do?" \
+            "Submit" "Edit" "Regenerate" "Cancel")
+
+        switch $choice
+            case Submit
+                echo
+                git commit -m "$commit_message"
+                gum style --foreground "#a9b1d6" --margin "1 0" "Changes committed successfully"
+                return 0
+
+            case Edit
+                set -l raw_message (gum input --width 72 \
+                    --header "Edit commit message - type(scope): message:" \
+                    --value "$commit_message")
+
+                # validate against conventional commit format
+                if not string match -qr '^(\w+)(?:\((.*?)\))?: (.+)$' -- $raw_message
+                    gum log -l error "Invalid conventional commit format"
+                    continue
+                end
+
+                set commit_message $raw_message
+                echo
+                gum style --bold "Updated commit message:"
+                echo
+                gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
+                echo
+
+            case Regenerate
+                gc
+                return
+
+            case Cancel '*'
                 gum log -l warn "Commit aborted"
                 return 1
-            end
-
-            # user pressed 'No', show menu
-            set -l choice
-            while test -z "$choice"
-                # keep trying until we get a valid choice or CTRL+C
-                if not set choice (gum choose --header "What would you like to do?" \
-                    "Edit" "Regenerate" "Submit" "Cancel")
-                    if test $status -eq 130
-                        # CTRL+C pressed in choose menu, abort completely
-                        gum log -l warn "Commit aborted"
-                        return 1
-                    end
-                end
-            end
-
-            switch $choice
-                case Edit
-                    # edit raw message with validation
-                    while true
-                        set -l raw_message (gum input --width 72 \
-                            --header "Edit commit message - type(scope): message:" \
-                            --value "$commit_message")
-
-                        # CTRL+C pressed while editing
-                        if test $status -eq 130
-                            break # exit edit loop, return to satisfaction prompt
-                        end
-
-                        # validate against conventional commit format
-                        if not string match -qr '^(\w+)(?:\((.*?)\))?: (.+)$' -- $raw_message
-                            gum log -l error "Invalid conventional commit format"
-                            continue # stay in edit loop
-                        end
-
-                        # valid message, update and return to satisfaction prompt
-                        set commit_message $raw_message
-                        echo
-                        gum style --bold "Updated commit message:"
-                        echo
-                        gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
-                        echo
-                        break # exit edit loop
-                    end
-
-                case Regenerate
-                    # recursively call gc to regenerate
-                    gc
-                    return
-
-                case Submit
-                    git commit -m "$commit_message"
-                    gum style --foreground "#a9b1d6" --margin "1 0" "Changes committed successfully"
-                    return 0
-
-                case Cancel
-                    # return to satisfaction prompt
-                    continue
-            end
-        else
-            # user pressed 'Yes'
-            git commit -m "$commit_message"
-            gum style --foreground "#a9b1d6" --margin "1 0" "Changes committed successfully"
-            return 0
         end
     end
 end

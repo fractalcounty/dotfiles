@@ -12,12 +12,12 @@ function __gum_choose
     set -e GUM_CHOOSE_TIMEOUT # Timeout until choose returns selected element
 
     ## style flags
-    set -gx GUM_CHOOSE_CURSOR_FOREGROUND $theme_purple
+    set -gx GUM_CHOOSE_CURSOR_FOREGROUND $theme_blue
     set -e GUM_CHOOSE_CURSOR_BACKGROUND
-    set -gx GUM_CHOOSE_HEADER_FOREGROUND $theme_purple
+    set -gx GUM_CHOOSE_HEADER_FOREGROUND $theme_blue
     set -e GUM_CHOOSE_HEADER_BACKGROUND
     set -gx GUM_CHOOSE_ITEM_FOREGROUND $theme_gray
     set -e GUM_CHOOSE_ITEM_BACKGROUND
-    set -gx GUM_CHOOSE_SELECTED_FOREGROUND $theme_purple
+    set -gx GUM_CHOOSE_SELECTED_FOREGROUND $theme_blue
     set -e GUM_CHOOSE_SELECTED_BACKGROUND
 end
