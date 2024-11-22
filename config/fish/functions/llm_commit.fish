@@ -20,6 +20,7 @@ abbr -a gc llm_commit
 # - 'gc': generate a commit message using default mode ('fat', can be changed via 'DEFAULT_MODE' below)
 # - 'gc [-f|--fat]': use fat mode (higher quality, slower, more expensive)
 # - 'gc [-l|--lean]': use lean mode (decent quality, no chain-of-thought reasoning, faster, cheaper)
+# - 'gc [-a|--all]': stage all files with 'git add .' before generating a commit message
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
 #          constants (global config)           #
@@ -32,6 +33,9 @@ set -q LLMC_CACHE_RESPONSES; or set -g LLMC_CACHE_RESPONSES false
 
 # cache directory path to use if LLMC_CACHE_RESPONSES is true ($XDG_CACHE_HOME or ~/.cache/ if not set)
 # set -g LLMC_CACHE_DIR "./my/custom/llm_commit"  # uncomment to override
+
+# whether to always run 'git add .' before executing any other logic (not recommended)
+set -q LLMC_ALWAYS_ADD_ALL; or set -g LLMC_ALWAYS_ADD_ALL true
 
 # temperature for the LLM response (0.0 to 1.0)
 set -q TEMPERATURE; or set -g TEMPERATURE 0.3
@@ -125,7 +129,8 @@ function _help
     gum format -- "# Options:
 - **-h, --help**    Show this help message
 - **-f, --fat**     Use fat mode (higher quality, slower)
-- **-l, --lean**    Use lean mode (faster, cheaper)"
+- **-l, --lean**    Use lean mode (faster, cheaper)
+- **-a, --all**     Stage all files with `git add .`"
     gum format -- "# Notes:
 - Requires `ANTHROPIC_API_KEY` to be set in environment
 - Model, default mode, system prompts, etc. can be configured in script"
@@ -274,6 +279,7 @@ end
 
 function llm_commit
     set -l mode $DEFAULT_MODE
+    set -l force_add false
     set -l remaining_args
 
     for arg in $argv
@@ -285,6 +291,8 @@ function llm_commit
                 set mode fat
             case -l --lean
                 set mode lean
+            case -a --all
+                set force_add true
             case '*'
                 set -a remaining_args $arg
         end
@@ -300,17 +308,24 @@ function llm_commit
         return 1
     end
 
+    # modify staging logic to handle force_add flag
+    if test "$LLMC_ALWAYS_ADD_ALL" = true; or test "$force_add" = true
+        gum log -l info "Adding all changes to index..."
+        git add .
+    end
+
     if test -z "$(git diff --cached --name-only)"
         if test -n "$(git status --porcelain)"
             gum log -l warn "No staged changes to commit"
             echo
-            if gum confirm "Would you like to add all files to the index?"
+            # only show prompt if auto-add is disabled
+            if test "$LLMC_ALWAYS_ADD_ALL" = false; and gum confirm "Would you like to add all files to the index?"
                 git add .
                 if test -z "$(git diff --cached --name-only)"
                     gum log -l error "No staged files contain any changes"
                     return 1
                 end
-            else
+            else if test "$LLMC_ALWAYS_ADD_ALL" = false
                 gum log -l error "Exiting without staging changes"
                 return 1
             end
