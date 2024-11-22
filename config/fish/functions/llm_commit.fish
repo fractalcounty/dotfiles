@@ -174,20 +174,31 @@ $recent_commits
         ]
     }')
 
+    set -l timeout 10
     set -l response (
         gum spin \
             --title="Generating commit message..." -- \
-        curl -sS https://api.anthropic.com/v1/messages \
+        timeout $timeout curl -sS https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
             -d "$json_payload"
     )
+    set -l curl_status $status
 
-    # if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
-    #     gum log -l debug "API response:"
-    #     printf '%s' $response | jq --color-output '.' | gum style --foreground "#a9b1d6" --padding 1 --width 80 --border=rounded
-    # end
+    if test $curl_status -eq 124
+        gum log -l error "Request timed out after $timeout seconds"
+        return 1
+    else if test $curl_status -ne 0
+        gum log -l error "API request failed with status $curl_status"
+        return 1
+    end
+
+    set -l rate_limit (echo $response | jq -r '.error.type // empty')
+    if test "$rate_limit" = rate_limit_error
+        gum log -l error "API rate limit exceeded. Please try again later."
+        return 1
+    end
 
     if not echo $response | jq -e . >/dev/null 2>&1
         gum log -l error "Invalid JSON response from API"
