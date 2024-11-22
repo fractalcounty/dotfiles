@@ -7,5 +7,5 @@ function gc --description "Git commit with LLM-generated message using 1Password
     end
 
     # call the original llm_commit function
-    llm_commit $argv
+    llm_commit -a $argv
 end

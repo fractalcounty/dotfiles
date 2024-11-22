@@ -14,7 +14,7 @@
 # 4. Set the ANTHROPIC_API_KEY env var securely in your environment, i.e w/ a password manager
 #    (or directly in this script with 'set -gx ANTHROPIC_API_KEY <key>' if you're lazy like me)
 # 5. Reccomended: add 'gc' alias for convenience, you can move this to your fish config if you want
-abbr -a gc llm_commit
+# abbr -a gc llm_commit
 
 ## USAGE:
 # - 'gc': generate a commit message using default mode ('fat', can be changed via 'DEFAULT_MODE' below)
@@ -35,7 +35,7 @@ set -q LLMC_CACHE_RESPONSES; or set -g LLMC_CACHE_RESPONSES false
 # set -g LLMC_CACHE_DIR "./my/custom/llm_commit"  # uncomment to override
 
 # whether to always run 'git add .' before executing any other logic (not recommended)
-set -q LLMC_ALWAYS_ADD_ALL; or set -g LLMC_ALWAYS_ADD_ALL true
+set -q LLMC_ALWAYS_ADD_ALL; or set -g LLMC_ALWAYS_ADD_ALL false
 
 # temperature for the LLM response (0.0 to 1.0)
 set -q TEMPERATURE; or set -g TEMPERATURE 0.3
@@ -310,8 +310,13 @@ function llm_commit
 
     # modify staging logic to handle force_add flag
     if test "$LLMC_ALWAYS_ADD_ALL" = true; or test "$force_add" = true
-        gum log -l info "Adding all changes to index..."
-        git add .
+        set -l unstaged_count (git status --porcelain | count)
+        if test $unstaged_count -gt 0
+            git add .
+            # use gum log with proper string formatting
+            set -l msg (printf "Added %d file%s to index" $unstaged_count (test $unstaged_count -gt 1; and echo "s"; or echo ""))
+            gum log --level info "$msg"
+        end
     end
 
     if test -z "$(git diff --cached --name-only)"
