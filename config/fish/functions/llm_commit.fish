@@ -14,6 +14,7 @@
 # 4. Set the ANTHROPIC_API_KEY env var securely in your environment, i.e w/ a password manager
 #    (or directly in this script with 'set -gx ANTHROPIC_API_KEY <key>' if you're lazy like me)
 # 5. Reccomended: add 'gc' alias for convenience, you can move this to your fish config if you want
+
 # abbr -a gc llm_commit
 
 ## USAGE:
@@ -29,7 +30,7 @@
 ## you can also set these in your environment if you prefer (will take precedence over below)
 
 # whether or not to cache commit messages to reduce redundant LLM calls
-set -q LLMC_CACHE_RESPONSES; or set -g LLMC_CACHE_RESPONSES false
+set -q LLMC_CACHE_RESPONSES; or set -g LLMC_CACHE_RESPONSES true
 
 # cache directory path to use if LLMC_CACHE_RESPONSES is true ($XDG_CACHE_HOME or ~/.cache/ if not set)
 # set -g LLMC_CACHE_DIR "./my/custom/llm_commit"  # uncomment to override
@@ -139,7 +140,11 @@ end
 function _show_commit_message -a message -a is_cached
     echo
     if test -n "$is_cached"
-        gum style --foreground "#7aa2f7" --bold "Proposed commit message (cached):"
+        # split into two parts with different colors
+        gum join --horizontal \
+            (gum style --foreground "#7aa2f7" --bold "Proposed commit message ") \
+            (gum style --foreground "#bb9af7" --bold "(cached)") \
+            (gum style --foreground "#7aa2f7" ":")
     else
         gum style --foreground "#7aa2f7" --bold "Proposed commit message:"
     end
