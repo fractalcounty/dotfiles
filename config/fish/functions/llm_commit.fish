@@ -196,7 +196,7 @@ $recent_commits
         printf '%s' $response | jq --color-output '.' | gum style --foreground "#a9b1d6" --padding 1 --width 80 --border=rounded
     end
 
-    # Parse and validate response
+    # parse and validate response
     if not echo $response | jq -e . >/dev/null 2>&1
         gum log -l error "Invalid JSON response from API"
         return 1
