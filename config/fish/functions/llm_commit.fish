@@ -104,6 +104,7 @@ set -g LEAN_PROMPT "You are tasked with analyzing git diffs and generating high-
 3. message must be concise, terse, and under 72 characters yet meaningful
 4. return 'null' for scope UNLESS changes affect a specific component
 5. use imperative mood (\"add\" not \"added\") in all-lowercase without punctuation
+6. never include file extensions in the scope (e.g \".ts\" or \".md\")
 </rules>"
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
