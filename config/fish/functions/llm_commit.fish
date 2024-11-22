@@ -1,8 +1,12 @@
-# reference to anthropic API key secret from 1Password
-set -g ANTHROPIC_SECRET_REF "op://Development/Anthropic/macbook"
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
+#          constants (global config)           #
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
+
+## anthropic API secret key (https://console.anthropic.com/settings/keys)
+set -g ANTHROPIC_API_KEY
 
 # system prompt as a script-level constant with role definition and structured format
-set -g SYSTEM_PROMPT "You are a Git Commit Message Expert with years of experience analyzing version control diffs and crafting precise, meaningful commit messages. Your specialty is generating high-quality conventional commit messages that perfectly capture the essence of code changes.
+set -g SYSTEM_PROMPT "You are a Git Commit Message Expert with years of experience analyzing version control diffs and crafting precise, meaningful commit messages. Your specialty is generating high-quality conventional commit messages within a JSON object that perfectly capture the essence of code changes.
 
 <output_format>
 {
@@ -39,7 +43,7 @@ set -g SYSTEM_PROMPT "You are a Git Commit Message Expert with years of experien
 9. include chain-of-thought analysis in the analysis field
 </rules>"
 
-function gc --description "Generate commit message using Claude AI and commit changes"
+function llm_commit --description "Generate a git commit message using Claude AI and commit changes"
 
     # check if we're in a git repo
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
@@ -47,20 +51,10 @@ function gc --description "Generate commit message using Claude AI and commit ch
         return 1
     end
 
-    # check if ANTHROPIC_API_KEY is set
+    # simplified api key check
     if not set -q ANTHROPIC_API_KEY
-        gum log -l info "Setting ANTHROPIC_API_KEY from $ANTHROPIC_SECRET_REF"
-        echo
-
-        if test -z "$ANTHROPIC_SECRET_REF" || not string match -q 'op://*' "$ANTHROPIC_SECRET_REF"
-            gum log -l error "Invalid secret reference format"
-            return 1
-        end
-
-        if not setsecret ANTHROPIC_API_KEY "$ANTHROPIC_SECRET_REF"
-            gum log -l error "Failed to set ANTHROPIC_API_KEY from $ANTHROPIC_SECRET_REF"
-            return 1
-        end
+        gum log -l error "ANTHROPIC_API_KEY environment variable is not set"
+        return 1
     end
 
     # check staged changes

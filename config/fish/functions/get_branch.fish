@@ -1,4 +1,4 @@
-function gitbranch -d "Detect various Git branch names"
+function get_branch -d "Detect various Git branch names"
     set -lx GUM_FORMAT_THEME "$__fish_themes_dir/tui.json"
     set -lx GLAMOUR_STYLE "$__fish_themes_dir/tui.json"
 

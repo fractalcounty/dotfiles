@@ -41,29 +41,18 @@ symbol = " "
 
 [git_status]
 format = '([$ahead_behind $all_status]($style)) '
-conflicted = '󰕚 ' # nf-md-vector_difference
-untracked = ' ' # nf-cod-diff_ignored
-modified = ' ' # nf-cod-diff_modified
-deleted = ' ' # nf-oct-diff_removed
-renamed = ' ' # nf-cod-diff_renamed
-up_to_date = '' # checkmark
-ahead = ' ' # up arrow
-behind = ' ' # down arrow
+conflicted = '󰕚 '                                 # nf-md-vector_difference
+untracked = ' '                                  # nf-cod-diff_ignored
+modified = ' '                                   # nf-cod-diff_modified
+deleted = ' '                                    # nf-oct-diff_removed
+renamed = ' '                                    # nf-cod-diff_renamed
+up_to_date = ''                                  # checkmark
+ahead = ' '                                      # up arrow
+behind = ' '                                     # down arrow
 diverged = '${ahead_count}${behind_count}'
-stashed = '${count}' # box
+stashed = '${count}'                             # box
 staged = '[++\($count\)](green)'
 style = 'purple dimmed'
-
-[custom.godot]
-command = "fish ~/.config/fish/functions/gd-info.fish"
-format = "[$symbol $output]($style) "
-detect_files = ["project.godot"]
-detect_folders = [".godot"]
-detect_extensions = [".godot", ".tscn", ".gd", ".tres"]
-when = "fish -c 'gd-find >/dev/null'"
-disabled = false
-symbol = "󰚩 "
-style = "bold blue"
 
 [c]
 symbol = " "
