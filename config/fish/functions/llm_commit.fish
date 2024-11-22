@@ -79,7 +79,8 @@ set -g FAT_PROMPT "You are a Git Commit Message Expert with years of experience 
 6. write in lowercase, no period at end
 7. be specific and descriptive yet terse
 8. focus on the actual code changes, not just file names
-9. include chain-of-thought analysis in the analysis field
+9. only include chain-of-thought analysis in the analysis field
+10. never include filenames in the scope if a scope is appropriate
 </rules>"
 
 # lean mode system prompt (terse, no chain-of-thought reasoning)
