@@ -27,7 +27,10 @@ abbr -a gc llm_commit
 
 ## you can also set these in your environment if you prefer (will take precedence over below)
 
-# cache directory path to store temporary commit messages ($XDG_CACHE_HOME or ~/.cache/ if not set)
+# whether or not to cache commit messages to reduce redundant LLM calls
+set -q LLMC_CACHE_RESPONSES; or set -g LLMC_CACHE_RESPONSES false
+
+# cache directory path to use if LLMC_CACHE_RESPONSES is true ($XDG_CACHE_HOME or ~/.cache/ if not set)
 # set -g LLMC_CACHE_DIR "./my/custom/llm_commit"  # uncomment to override
 
 # temperature for the LLM response (0.0 to 1.0)
@@ -319,20 +322,30 @@ function llm_commit
 
     # Get hash of staged changes
     set -l staged_hash (_get_staged_hash)
-    set -l cached_message (_get_cached_message $staged_hash)
+    set -l cached_message ""
     set -l commit_message ""
     set -l is_cached 0
 
-    if test $status -eq 0
-        # Cache exists, use it initially
-        set commit_message "$cached_message"
-        set is_cached 1
-        _show_commit_message "$commit_message" true
-    else
-        # No cache exists, generate new message
+    # Only check cache if enabled
+    if test "$LLMC_CACHE_RESPONSES" = true
+        set cached_message (_get_cached_message $staged_hash)
+        if test $status -eq 0
+            # Cache exists, use it initially
+            set commit_message "$cached_message"
+            set is_cached 1
+            _show_commit_message "$commit_message" true
+        end
+    end
+
+    # Generate new message if no cache or caching disabled
+    if test -z "$commit_message"
         set commit_message (_generate_commit_message $mode)
         or return 1
-        _cache_message $staged_hash "$commit_message"
+
+        # Only cache if enabled
+        if test "$LLMC_CACHE_RESPONSES" = true
+            _cache_message $staged_hash "$commit_message"
+        end
         _show_commit_message "$commit_message"
     end
 
