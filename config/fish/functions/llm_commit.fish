@@ -118,8 +118,126 @@ function _help
 - Model, default mode, system prompts, etc. can be configured in script"
 end
 
-function llm_commit --description "Generate a git commit message using Claude AI and commit changes"
+function _show_commit_message -a message
+    echo
+    gum style --foreground "#7aa2f7" --bold "Proposed commit message:"
+    echo
+    gum style --foreground "#c0caf5" --background "#373d5a" "$message"
+    echo
+end
 
+# Add this helper function to handle the API call and response parsing
+function _generate_commit_message -a mode -a temp
+    # Default to standard temperature if not provided
+    set -l temperature $temp
+    if test -z "$temperature"
+        set temperature $TEMPERATURE
+    end
+
+    # Get latest diff and commits
+    set -l diff_context (git diff --cached --diff-algorithm=minimal)
+    set -l recent_commits (git log -3 --pretty=format:"%B" 2>/dev/null | string collect)
+
+    set -l user_prompt "Analyze this git diff and generate a commit message:
+
+<git_diff>
+$diff_context
+</git_diff>
+
+<recent_commits>
+$recent_commits
+</recent_commits>"
+
+    # Get mode-specific settings
+    set -l mode_upper (string upper $mode)
+    set -l model_var $mode_upper"_MODEL"
+    set -l max_tokens_var $mode_upper"_MAX_TOKENS"
+    set -l prompt_var $mode_upper"_PROMPT"
+
+    if not set -q $model_var; or not set -q $max_tokens_var; or not set -q $prompt_var
+        return 1
+    end
+
+    set -l model (string replace -r '^.*$' "$$model_var" "")
+    set -l max_tokens (string replace -r '^.*$' "$$max_tokens_var" "")
+    set -l prompt (string replace -r '^.*$' "$$prompt_var" "")
+
+    set -l json_payload (echo '{
+        "model": "'(echo $model)'",
+        "max_tokens": '(echo $max_tokens)',
+        "temperature": '(echo $temperature)',
+        "system": '(echo $prompt | jq -R -s .)' ,
+        "messages": [
+            {
+                "role": "user", 
+                "content": '(echo $user_prompt | jq -R -s .)'
+            },
+            {
+                "role": "assistant",
+                "content": "{\"analysis\":"
+            }
+        ]
+    }')
+
+    # Make API call
+    set -l response (
+        gum spin \
+            --title="Generating commit message..." -- \
+        curl -sS https://api.anthropic.com/v1/messages \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d "$json_payload"
+    )
+
+    # Debug logging
+    if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
+        gum log -l debug "API response:"
+        printf '%s' $response | jq --color-output '.' | gum style --foreground "#a9b1d6" --padding 1 --width 80 --border=rounded
+    end
+
+    # Parse and validate response
+    if not echo $response | jq -e . >/dev/null 2>&1
+        gum log -l error "Invalid JSON response from API"
+        return 1
+    end
+
+    set -l content (echo $response | jq -r '.content[0].text // empty' 2>/dev/null)
+    if test -z "$content"
+        gum log -l error "Empty response from API"
+        return 1
+    end
+
+    set -l cleaned_content (echo $content | string replace -r '```json\s*' '' | string replace -r '```\s*$' '' | string trim)
+    set -l complete_json "{\"analysis\": $cleaned_content"
+
+    # Parse commit data
+    if not set -l commit_data (echo $complete_json | jq -e '.' 2>/dev/null)
+        gum log -l error "Invalid JSON in response content"
+        return 1
+    end
+
+    # Extract commit components
+    if not set -l type (echo $commit_data | jq -r '.type // empty')
+        gum log -l error "Missing commit type"
+        return 1
+    end
+    set -l scope (echo $commit_data | jq -r '.scope // empty')
+    if not set -l message (echo $commit_data | jq -r '.message // empty')
+        gum log -l error "Missing commit message"
+        return 1
+    end
+
+    # Format commit message
+    set -l commit_message "$type"
+    if test -n "$scope" -a "$scope" != null
+        set commit_message "$commit_message($scope)"
+    end
+    echo "$commit_message: $message"
+end
+
+# Then modify the main function to use the helper
+function llm_commit
     set -l mode $DEFAULT_MODE
     set -l remaining_args
 
@@ -147,145 +265,35 @@ function llm_commit --description "Generate a git commit message using Claude AI
         return 1
     end
 
-    set -l diff_context (git diff --cached --diff-algorithm=minimal)
-    if test -z "$diff_context"
-        echo
-        if not gum confirm "No staged changes. Stage all changes?"
-            return 1
-        end
-
-        set -l unstaged_changes (git diff --name-only)
-        if test -z "$unstaged_changes"
+    # check for staged changes and handle unstaged files
+    if test -z "$(git diff --cached --name-only)"
+        # check if there are any unstaged changes
+        if test -n "$(git status --porcelain)"
+            gum log -l warn "No staged changes to commit"
+            echo
+            if gum confirm "Would you like to add all files to the index?"
+                git add .
+                # verify staging worked and there are actual changes
+                if test -z "$(git diff --cached --name-only)"
+                    gum log -l error "No staged files contain any changes"
+                    return 1
+                end
+            else
+                gum log -l error "Exiting without staging changes"
+                return 1
+            end
+        else
             gum log -l error "No changes to commit"
             return 1
         end
-
-        git add .
-        set diff_context (git diff --cached --diff-algorithm=minimal)
     end
 
-    # get recent commits for style reference
-    set -l recent_commits (git log -3 --pretty=format:"%B" 2>/dev/null | string collect)
+    # Initial generation with default temperature
+    set -l commit_message (_generate_commit_message $mode)
+    or return 1
 
-    set -l user_prompt "Analyze this git diff and generate a commit message:
-
-<git_diff>
-$diff_context
-</git_diff>
-
-<recent_commits>
-$recent_commits
-</recent_commits>"
-
-    set -l mode_upper (string upper $mode)
-    set -l model_var $mode_upper"_MODEL"
-    set -l max_tokens_var $mode_upper"_MAX_TOKENS"
-    set -l prompt_var $mode_upper"_PROMPT"
-
-    if not set -q $model_var
-        gum log -l error "Model variable $model_var not found"
-        return 1
-    end
-    if not set -q $max_tokens_var
-        gum log -l error "Max tokens variable $max_tokens_var not found"
-        return 1
-    end
-    if not set -q $prompt_var
-        gum log -l error "Prompt variable $prompt_var not found"
-        return 1
-    end
-
-    set -l model (string replace -r '^.*$' "$$model_var" "")
-    set -l max_tokens (string replace -r '^.*$' "$$max_tokens_var" "")
-    set -l prompt (string replace -r '^.*$' "$$prompt_var" "")
-
-    if test -z "$model" -o -z "$max_tokens" -o -z "$prompt"
-        gum log -l error "Missing required settings for $mode mode"
-        gum log -l debug "Model: $model"
-        gum log -l debug "Max tokens: $max_tokens"
-        gum log -l debug "Prompt: $prompt"
-        return 1
-    end
-
-    set -l json_payload (echo '{
-        "model": "'(echo $model)'",
-        "max_tokens": '(echo $max_tokens)',
-        "temperature": '(echo $TEMPERATURE)',
-        "system": '(echo $prompt | jq -R -s .)' ,
-        "messages": [
-            {
-                "role": "user", 
-                "content": '(echo $user_prompt | jq -R -s .)'
-            },
-            {
-                "role": "assistant",
-                "content": "{\"analysis\":"
-            }
-        ]
-    }')
-
-    gum log -l debug "Using $mode mode with model $model"
-
-    set -l response (
-        gum spin \
-            --title="Generating commit message..." -- \
-        curl -sS https://api.anthropic.com/v1/messages \
-            -H "Content-Type: application/json" \
-            -H "x-api-key: $ANTHROPIC_API_KEY" \
-            -H "anthropic-version: 2023-06-01" \
-            -d "$json_payload"
-    )
-
-    if set -q LOG_LEVEL && string match -q debug $LOG_LEVEL
-        gum log -l debug "API response:"
-        printf '%s' $response | jq --color-output '.' | gum style --foreground "#a9b1d6" --padding 1 --width 80 --border=rounded
-    end
-
-    if not echo $response | jq -e . >/dev/null 2>&1
-        gum log -l error "Invalid JSON response from API"
-        return 1
-    end
-
-    set -l content (echo $response | jq -r '.content[0].text // empty' 2>/dev/null)
-    if test -z "$content"
-        gum log -l error "Empty response from API"
-        return 1
-    end
-
-    # reconstruct the complete JSON by adding back prefill
-    set -l cleaned_content (echo $content | string replace -r '```json\s*' '' | string replace -r '```\s*$' '' | string trim)
-    # add back the opening brace and prefilled analysis field
-    set -l complete_json "{\"analysis\": $cleaned_content"
-
-    if not set -l commit_data (echo $complete_json | jq -e '.' 2>/dev/null)
-        gum log -l error "Invalid JSON in response content"
-        gum log -l debug "Content: $content"
-        gum log -l debug "Cleaned content: $cleaned_content"
-        gum log -l debug "Complete JSON: $complete_json"
-        return 1
-    end
-
-    if not set -l type (echo $commit_data | jq -r '.type // empty')
-        gum log -l error "Missing commit type"
-        return 1
-    end
-    set -l scope (echo $commit_data | jq -r '.scope // empty')
-    if not set -l message (echo $commit_data | jq -r '.message // empty')
-        gum log -l error "Missing commit message"
-        return 1
-    end
-
-    set -l commit_message "$type"
-    if test -n "$scope" -a "$scope" != null
-        set commit_message "$commit_message($scope)"
-    end
-    set commit_message "$commit_message: $message"
-
-    echo
-    gum style --foreground "#7aa2f7" --bold "Generated commit message:"
-    echo
-    gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
-    echo
+    # initial display of commit message
+    _show_commit_message "$commit_message"
 
     while true
         set -l choice (gum choose --header "What would you like to do?" \
@@ -299,26 +307,43 @@ $recent_commits
                 return 0
 
             case Edit
+                # capture status and output separately to handle interrupts properly
                 set -l raw_message (gum input --width 72 \
                     --header "Edit commit message - type(scope): message:" \
                     --value "$commit_message")
+                set -l input_status $status
 
-                # validate against conventional commit format
+                # handle interrupt (ctrl+c)
+                if test $input_status -eq 130
+                    continue
+                end
+
+                # handle other errors
+                if test $input_status -ne 0
+                    gum log -l error "Failed to get input"
+                    continue
+                end
+
+                # validate commit format
                 if not string match -qr '^(\w+)(?:\((.*?)\))?: (.+)$' -- $raw_message
                     gum log -l error "Invalid conventional commit format"
                     continue
                 end
 
+                # update the message and clear screen before showing updated version
                 set commit_message $raw_message
-                echo
-                gum style --bold "Updated commit message:"
-                echo
-                gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
-                echo
+                clear
+                _show_commit_message "$commit_message"
 
             case Regenerate
-                gc
-                return
+                clear
+                # Use higher temperature (0.7) for regeneration to encourage variation
+                set -l new_message (_generate_commit_message $mode 0.7)
+                if test $status -eq 0
+                    set commit_message $new_message
+                    _show_commit_message "$commit_message"
+                end
+                continue
 
             case Cancel '*'
                 gum log -l warn "Commit aborted"
