@@ -2,11 +2,31 @@
 #          constants (global config)           #
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
 
-## anthropic API secret key (https://console.anthropic.com/settings/keys)
-set -g ANTHROPIC_API_KEY
+## recommended: abbr for convenience
+# abbr -a gc llm_commit
 
-# system prompt as a script-level constant with role definition and structured format
-set -g SYSTEM_PROMPT "You are a Git Commit Message Expert with years of experience analyzing version control diffs and crafting precise, meaningful commit messages. Your specialty is generating high-quality conventional commit messages within a JSON object that perfectly capture the essence of code changes.
+## required: anthropic API secret key (https://console.anthropic.com/settings/keys)
+## can be set here or securely in your environment (i.e through password manager)
+# set -gx ANTHROPIC_API_KEY <value>
+
+## temperature for the LLM response (0.0 to 1.0)
+set -g TEMPERATURE 0.3
+
+## required: default mode to use (overriden with --fat/-f or --lean/-l)
+# fat - higher quality, slower, higher cost
+# lean - faster, cheaper, lower quality (no chain-of-thought)
+set -g DEFAULT_MODE fat
+
+## anthropic models to use (https://docs.anthropic.com/en/docs/about-claude/models)
+set -g FAT_MODEL claude-3-5-sonnet-latest # model to use for fat mode
+set -g LEAN_MODEL claude-3-5-haiku-20241022 # model to use for lean mode
+
+## max amount of tokens to return in the LLM response
+set -g FAT_MAX_TOKENS 300
+set -g LEAN_MAX_TOKENS 100
+
+## system prompt as a script-level constant with role definition and structured format
+set -g FAT_PROMPT "You are a Git Commit Message Expert with years of experience analyzing version control diffs and crafting precise, meaningful commit messages. Your specialty is generating high-quality conventional commit messages within a JSON object that perfectly capture the essence of code changes.
 
 <output_format>
 {
@@ -43,7 +63,59 @@ set -g SYSTEM_PROMPT "You are a Git Commit Message Expert with years of experien
 9. include chain-of-thought analysis in the analysis field
 </rules>"
 
+set -g LEAN_PROMPT "You are tasked with analyzing git diffs and generating high-quality conventional commit messages in the form of a JSON object.
+
+<output_format>
+{
+  \"analysis\": \"[always null]\",
+  \"type\": \"[feat/fix/build/ci/test/docs/refactor/perf/style/chore/revert]\",
+  \"scope\": \"[specific component if precise changes, otherwise null]\",
+  \"message\": \"[commit message]\"
+}
+</output_format>
+
+<rules>
+1. return ONLY a valid json object - no other text
+2. ALWAYS return 'null' for the 'analysis' field
+3. message must be concise, terse, and under 72 characters yet meaningful
+4. return 'null' for scope UNLESS changes affect a specific component
+5. use imperative mood (\"add\" not \"added\") in all-lowercase without punctuation
+</rules>"
+
+function _help
+    echo
+    gum format -- "# llm_commit - ai-powered conventional commit message generator"
+    echo
+    gum format -- "# Usage: 
+**llm_commit** \<options\>"
+    gum format -- "# Options:
+- **-h, --help**    Show this help message
+- **-f, --fat**     Use fat mode (higher quality, slower)
+- **-l, --lean**    Use lean mode (faster, cheaper)"
+    gum format -- "# Notes:
+- Requires `ANTHROPIC_API_KEY` to be set in environment
+- Model, default mode, system prompts, etc. can be configured in script"
+end
+
 function llm_commit --description "Generate a git commit message using Claude AI and commit changes"
+
+    # parse arguments for mode selection
+    set -l mode $DEFAULT_MODE
+    set -l remaining_args
+
+    for arg in $argv
+        switch $arg
+            case -h --help
+                _help
+                return 0
+            case -f --fat
+                set mode fat
+            case -l --lean
+                set mode lean
+            case '*'
+                set -a remaining_args $arg
+        end
+    end
 
     # check if we're in a git repo
     if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
@@ -55,13 +127,15 @@ function llm_commit --description "Generate a git commit message using Claude AI
     if not set -q ANTHROPIC_API_KEY
         gum log -l error "ANTHROPIC_API_KEY environment variable is not set"
         return 1
+    else
+        gum log -l debug "Using ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY"
     end
 
     # check staged changes
     set -l diff_context (git diff --cached --diff-algorithm=minimal)
     if test -z "$diff_context"
         echo
-        if not gum confirm --prompt.foreground="$theme_blue" "No staged changes. Stage all changes?"
+        if not gum confirm "No staged changes. Stage all changes?"
             return 1
         end
 
@@ -90,12 +164,17 @@ $diff_context
 $recent_commits
 </recent_commits>"
 
+    # select model, max tokens and prompt based on mode
+    set -l model $$mode"_MODEL"
+    set -l max_tokens $$mode"_MAX_TOKENS"
+    set -l prompt $$mode"_PROMPT"
+
     # prepare the api payload with role and prefill
     set -l json_payload (echo '{
-        "model": "claude-3-5-sonnet-20241022",
-        "max_tokens": 1000,
-        "temperature": 0.3,
-        "system": '(echo $SYSTEM_PROMPT | jq -R -s .)' ,
+        "model": "'(echo $model)'",
+        "max_tokens": '(echo $max_tokens)',
+        "temperature": '(echo $TEMPERATURE)',
+        "system": '(echo $prompt | jq -R -s .)' ,
         "messages": [
             {
                 "role": "user", 
@@ -109,11 +188,12 @@ $recent_commits
     }')
 
     # debug logging
+    gum log -l debug "Using $mode mode with model $model"
     gum log -l debug "API payload: $json_payload"
 
     # make the api call with spinner
     set -l response (
-        gum spin --spinner.foreground="$theme_blue" \
+        gum spin \
             --title="Generating commit message..." -- \
         curl -sS https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
@@ -176,9 +256,9 @@ $recent_commits
 
     # preview
     echo
-    gum style --foreground "$theme_blue" --bold "Generated commit message:"
+    gum style "Generated commit message:"
     echo
-    gum style -th code "$commit_message"
+    gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
     echo
 
     # debug logging
@@ -186,7 +266,7 @@ $recent_commits
 
     while true
         # initial satisfaction check - handle CTRL+C but allow "No" to continue to menu
-        set -l satisfied (gum confirm --prompt.foreground="$theme_blue" "Are you satisfied with this message?")
+        set -l satisfied (gum confirm "Are you satisfied with this message?")
         set -l status_code $status
 
         # If CTRL+C was pressed (status 130), abort
@@ -198,14 +278,13 @@ $recent_commits
         # If satisfied (status 0), commit and exit
         if test $status_code -eq 0
             git commit -m "$commit_message"
-            gum style --foreground "$theme_foreground" --margin "1 0" "Changes committed successfully"
+            gum style --foreground "#a9b1d6" --margin "1 0" "Changes committed successfully"
             return 0
         end
 
         # If not satisfied (status 1), show edit menu
         set -l choice (gum choose --header "What would you like to do?" \
-            --cursor.foreground="$theme_blue" \
-            "Edit" "Regenerate" "Confirm" "Cancel")
+            "Edit" "Regenerate" "Submit" "Cancel")
 
         # Check if CTRL+C was pressed during choose
         if test $status -eq 130
@@ -217,7 +296,7 @@ $recent_commits
             case Edit
                 # edit raw message with validation
                 set -l raw_message (gum input --width 72 \
-                    --header "Edit commit message (type(scope): message):" \
+                    --header "Edit commit message - type(scope): message:" \
                     --value "$commit_message")
 
                 # validate against conventional commit format
@@ -228,18 +307,18 @@ $recent_commits
 
                 set commit_message $raw_message
                 echo
-                gum style --foreground "$theme_blue" --bold "Updated commit message:"
+                gum style --bold "Updated commit message:"
                 echo
-                gum style -th code "$commit_message"
+                gum style --foreground "#c0caf5" --background "#373d5a" "$commit_message"
                 echo
 
             case Regenerate
                 gc
                 return
 
-            case Confirm
+            case Submit
                 git commit -m "$commit_message"
-                gum style --foreground "$theme_foreground" --margin "1 0" "Changes committed successfully"
+                gum style --foreground "#a9b1d6" --margin "1 0" "Changes committed successfully"
                 return 0
 
             case Cancel
