@@ -27,6 +27,9 @@ abbr -a gc llm_commit
 
 ## you can also set these in your environment if you prefer (will take precedence over below)
 
+# cache directory path to store temporary commit messages ($XDG_CACHE_HOME or ~/.cache/ if not set)
+# set -g LLMC_CACHE_DIR "./my/custom/llm_commit"  # uncomment to override
+
 # temperature for the LLM response (0.0 to 1.0)
 set -q TEMPERATURE; or set -g TEMPERATURE 0.3
 
@@ -102,6 +105,12 @@ set -g LEAN_PROMPT "You are tasked with analyzing git diffs and generating high-
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
 #            rest of the script lol            #
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
+
+set -q LLMC_CACHE_DIR; or set -g LLMC_CACHE_DIR (
+    test -n "$XDG_CACHE_HOME"; and echo "$XDG_CACHE_HOME/llm_commit"; or echo "$HOME/.cache/llm_commit"
+)
+mkdir -p "$LLMC_CACHE_DIR"
+
 function _help
     echo
     gum format -- "# llm_commit - ai-powered conventional commit message generator"
@@ -117,9 +126,13 @@ function _help
 - Model, default mode, system prompts, etc. can be configured in script"
 end
 
-function _show_commit_message -a message
+function _show_commit_message -a message -a is_cached
     echo
-    gum style --foreground "#7aa2f7" --bold "Proposed commit message:"
+    if test -n "$is_cached"
+        gum style --foreground "#7aa2f7" --bold "Proposed commit message (cached):"
+    else
+        gum style --foreground "#7aa2f7" --bold "Proposed commit message:"
+    end
     echo
     gum style --foreground "#c0caf5" --background "#373d5a" "$message"
     echo
@@ -236,6 +249,24 @@ $recent_commits
     echo "$commit_message: $message"
 end
 
+function _get_staged_hash
+    # Get a hash of staged changes to use as cache key
+    git diff --cached | sha256sum | cut -d' ' -f1
+end
+
+function _get_cached_message -a hash
+    set -l cache_file "$LLMC_CACHE_DIR/$hash"
+    if test -f "$cache_file"
+        cat "$cache_file"
+        return 0
+    end
+    return 1
+end
+
+function _cache_message -a hash message
+    echo "$message" >"$LLMC_CACHE_DIR/$hash"
+end
+
 function llm_commit
     set -l mode $DEFAULT_MODE
     set -l remaining_args
@@ -285,10 +316,24 @@ function llm_commit
         end
     end
 
-    set -l commit_message (_generate_commit_message $mode)
-    or return 1
+    # Get hash of staged changes
+    set -l staged_hash (_get_staged_hash)
+    set -l cached_message (_get_cached_message $staged_hash)
+    set -l commit_message ""
+    set -l is_cached 0
 
-    _show_commit_message "$commit_message"
+    if test $status -eq 0
+        # Cache exists, use it initially
+        set commit_message "$cached_message"
+        set is_cached 1
+        _show_commit_message "$commit_message" true
+    else
+        # No cache exists, generate new message
+        set commit_message (_generate_commit_message $mode)
+        or return 1
+        _cache_message $staged_hash "$commit_message"
+        _show_commit_message "$commit_message"
+    end
 
     while true
         set -l choice (gum choose --header "What would you like to do?" \
@@ -322,6 +367,7 @@ function llm_commit
                 end
 
                 set commit_message $raw_message
+                set is_cached 0 # No longer using cached version after edit
                 clear
                 _show_commit_message "$commit_message"
 
@@ -330,6 +376,8 @@ function llm_commit
                 set -l new_message (_generate_commit_message $mode 0.7)
                 if test $status -eq 0
                     set commit_message $new_message
+                    set is_cached 0 # No longer using cached version after regenerate
+                    _cache_message $staged_hash "$commit_message" # Cache the new message
                     _show_commit_message "$commit_message"
                 end
                 continue
