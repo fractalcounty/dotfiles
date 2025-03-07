@@ -19,8 +19,8 @@
 
 ## USAGE:
 # - 'gc': generate a commit message using default mode ('fat', can be changed via 'DEFAULT_MODE' below)
-# - 'gc [-f|--fat]': use fat mode (higher quality, slower, more expensive)
-# - 'gc [-l|--lean]': use lean mode (decent quality, no chain-of-thought reasoning, faster, cheaper)
+# - 'gc [-f|--fat]': use fat mode (higher quality, uses Claude 3.7 with native thinking)
+# - 'gc [-l|--lean]': use lean mode (decent quality, no thinking, faster, cheaper)
 # - 'gc [-a|--all]': stage all files with 'git add .' before generating a commit message
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
@@ -44,20 +44,25 @@ set -q TEMPERATURE; or set -g TEMPERATURE 0.3
 # required: default mode to use when 'gc' is called without specifying mode (--fat/-f or --lean/-l)
 set -q DEFAULT_MODE; or set -g DEFAULT_MODE fat
 
+# Anthropic API version
+set -q ANTHROPIC_API_VERSION; or set -g ANTHROPIC_API_VERSION 2023-06-01
+
 # anthropic models to use for each mode (https://docs.anthropic.com/en/docs/about-claude/models)
-set -q FAT_MODEL; or set -g FAT_MODEL claude-3-5-sonnet-latest
-set -q LEAN_MODEL; or set -g LEAN_MODEL claude-3-5-haiku-20241022
+set -q FAT_MODEL; or set -g FAT_MODEL claude-3-7-sonnet-latest
+set -q LEAN_MODEL; or set -g LEAN_MODEL claude-3-5-haiku-latest
 
 # max amount of tokens the LLM can return in each mode
-set -q FAT_MAX_TOKENS; or set -g FAT_MAX_TOKENS 300
-set -q LEAN_MAX_TOKENS; or set -g LEAN_MAX_TOKENS 100
+set -q FAT_MAX_TOKENS; or set -g FAT_MAX_TOKENS 4500
+set -q LEAN_MAX_TOKENS; or set -g LEAN_MAX_TOKENS 300
 
-# fat mode system prompt (uses chain-of-thought reasoning)
-set -g FAT_PROMPT "You are a Git Commit Message Expert with years of experience analyzing version control diffs and crafting precise, meaningful commit messages. Your specialty is generating high-quality conventional commit messages within a JSON object that perfectly capture the essence of code changes.
+# token budget for thinking in fat mode
+set -q THINKING_BUDGET; or set -g THINKING_BUDGET 4000
+
+# fat mode system prompt (leverages native thinking)
+set -g FAT_PROMPT "You are a Git Commit Message Expert specializing in analyzing version control diffs and crafting precise, meaningful conventional commit messages.
 
 <output_format>
 {
-  \"analysis\": \"[chain-of-thought reasoning about the changes]\",
   \"type\": \"[commit type]\",
   \"scope\": \"[scope or null]\",
   \"message\": \"[commit message]\"
@@ -79,24 +84,30 @@ set -g FAT_PROMPT "You are a Git Commit Message Expert with years of experience 
 </conventional_commit_types>
 
 <rules>
-1. return ONLY a valid json object - no other text
-2. message must be under 72 characters
-3. ALWAYS set scope to null unless changes affect a very specific component
+1. Return ONLY a valid JSON object with type, scope, and message fields
+2. Message must be under 72 characters
+3. Set scope to null unless changes affect a very specific component
 4. NEVER include file extensions in the scope (e.g \".ts\" or \".md\")
-5. if changes are broad/all-encompassing, set scope to null
-6. use imperative mood (\"add\" not \"added\")
-7. write in lowercase, no period at end
-8. be specific and descriptive yet terse
-9. focus on the actual code changes, not just file names
-10. only include chain-of-thought analysis in the analysis field
-</rules>"
+5. If changes are broad/all-encompassing, set scope to null
+6. Use imperative mood (\"add\" not \"added\")
+7. Write in lowercase, no period at end
+8. Be specific and descriptive yet terse
+9. Focus on the actual code changes, not just file names
+10. Use your extended thinking to deeply analyze the diff before formulating a commit message
+</rules>
+
+When analyzing git diffs:
+1. First examine the scope of changes (files affected and how)
+2. Determine the primary type of change being made
+3. Identify the specific functionality or component being changed
+4. Assess whether a scope is appropriate or if changes are too broad
+5. Formulate a concise description that captures the essence of the change"
 
 # lean mode system prompt (terse, no chain-of-thought reasoning)
-set -g LEAN_PROMPT "You are tasked with analyzing git diffs and generating high-quality conventional commit messages in the form of a JSON object.
+set -g LEAN_PROMPT "You are a Git Commit Message Expert tasked with generating high-quality conventional commit messages in JSON format.
 
 <output_format>
 {
-  \"analysis\": \"[always null]\",
   \"type\": \"[feat/fix/build/ci/test/docs/refactor/perf/style/chore/revert]\",
   \"scope\": \"[specific component if precise changes, otherwise null]\",
   \"message\": \"[commit message]\"
@@ -104,12 +115,11 @@ set -g LEAN_PROMPT "You are tasked with analyzing git diffs and generating high-
 </output_format>
 
 <rules>
-1. return ONLY a valid json object - no other text
-2. ALWAYS return 'null' for the 'analysis' field
-3. message must be concise, terse, and under 72 characters yet meaningful
-4. return 'null' for scope UNLESS changes affect a specific component
-5. use imperative mood (\"add\" not \"added\") in all-lowercase without punctuation
-6. never include file extensions in the scope (e.g \".ts\" or \".md\")
+1. Return ONLY a valid JSON object with type, scope, and message fields
+2. Message must be concise, terse, and under 72 characters yet meaningful
+3. Return 'null' for scope UNLESS changes affect a specific component
+4. Use imperative mood (\"add\" not \"added\") in all-lowercase without punctuation
+5. Never include file extensions in the scope (e.g \".ts\" or \".md\")
 </rules>"
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━#
@@ -129,8 +139,8 @@ function _help
 **llm_commit** \<options\>"
     gum format -- "# Options:
 - **-h, --help**    Show this help message
-- **-f, --fat**     Use fat mode (higher quality, slower)
-- **-l, --lean**    Use lean mode (faster, cheaper)
+- **-f, --fat**     Use fat mode (Claude 3.7 with native thinking)
+- **-l, --lean**    Use lean mode (Claude 3.5 Haiku, faster, cheaper)
 - **-a, --all**     Stage all files with `git add .`"
     gum format -- "# Notes:
 - Requires `ANTHROPIC_API_KEY` to be set in environment
@@ -189,6 +199,9 @@ function _generate_commit_message -a mode -a temp
     # Add git status summary for better context
     set -l status_summary (git status --porcelain=v2 | string collect)
 
+    # Get recent commits for context
+    set -l recent_commits (git log -n 5 --pretty=format:"%h %s" | string collect)
+
     # Modify user prompt to include status and optimize context
     set -l user_prompt "Analyze these git changes and generate a commit message:
 
@@ -217,31 +230,75 @@ $recent_commits
     set -l max_tokens (string replace -r '^.*$' "$$max_tokens_var" "")
     set -l prompt (string replace -r '^.*$' "$$prompt_var" "")
 
-    set -l json_payload (echo '{
-        "model": "'(echo $model)'",
-        "max_tokens": '(echo $max_tokens)',
-        "temperature": '(echo $temperature)',
-        "system": '(echo $prompt | jq -R -s .)' ,
-        "messages": [
-            {
-                "role": "user", 
-                "content": '(echo $user_prompt | jq -R -s .)'
-            },
-            {
-                "role": "assistant",
-                "content": "{\"analysis\":"
-            }
-        ]
-    }')
+    # Print token budget debug info
+    gum log -l debug "Model: $model"
+    gum log -l debug "Max tokens: $max_tokens"
+    if test "$mode" = fat
+        gum log -l info "Using Claude 3.7 with thinking budget: $THINKING_BUDGET"
+    end
 
-    set -l timeout 10
+    # Prepare API payload based on mode
+    set -l json_payload
+
+    if test "$mode" = fat
+        # Check if the model is Claude 3.7 (the only one supporting thinking)
+        if string match -q '*claude-3-7*' $model
+            # Fat mode with Claude 3.7: Use native thinking
+            set json_payload (echo '{
+                "model": "'(echo $model)'",
+                "max_tokens": 5000,
+                "thinking": {"type": "enabled", "budget_tokens": '(echo $THINKING_BUDGET)'},
+                "system": '(echo $prompt | jq -R -s .)' ,
+                "messages": [
+                    {
+                        "role": "user", 
+                        "content": '(echo $user_prompt | jq -R -s .)'
+                    }
+                ]
+            }')
+
+        else
+            # Fat mode with non-3.7 model: No thinking support
+            set json_payload (echo '{
+                "model": "'(echo $model)'",
+                "max_tokens": '(echo $max_tokens)',
+                "temperature": '(echo $temperature)',
+                "system": '(echo $prompt | jq -R -s .)' ,
+                "messages": [
+                    {
+                        "role": "user", 
+                        "content": '(echo $user_prompt | jq -R -s .)'
+                    }
+                ]
+            }')
+
+            gum log -l warn "Model does not support thinking, using standard request"
+
+        end
+    else
+        # Lean mode: No thinking
+        set json_payload (echo '{
+            "model": "'(echo $model)'",
+            "max_tokens": '(echo $max_tokens)',
+            "temperature": '(echo $temperature)',
+            "system": '(echo $prompt | jq -R -s .)' ,
+            "messages": [
+                {
+                    "role": "user", 
+                    "content": '(echo $user_prompt | jq -R -s .)'
+                }
+            ]
+        }')
+    end
+
+    set -l timeout 30
     set -l response (
         gum spin \
             --title="Generating commit message..." -- \
         timeout $timeout curl -sS https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
-            -H "anthropic-version: 2023-06-01" \
+            -H "anthropic-version: $ANTHROPIC_API_VERSION" \
             -d "$json_payload"
     )
     set -l curl_status $status
@@ -265,17 +322,49 @@ $recent_commits
         return 1
     end
 
-    set -l content (echo $response | jq -r '.content[0].text // empty' 2>/dev/null)
-    if test -z "$content"
-        gum log -l error "Empty response from API"
+    # Extract the content from the response
+    set -l content
+
+    # First, check if there's an error in the response
+    set -l error_message (echo $response | jq -r '.error.message // empty' 2>/dev/null)
+    if test -n "$error_message"
+        gum log -l error "API error: $error_message"
         return 1
     end
 
-    set -l cleaned_content (echo $content | string replace -r '```json\s*' '' | string replace -r '```\s*$' '' | string trim)
-    set -l complete_json "{\"analysis\": $cleaned_content"
+    # Handle different response formats based on mode and API version
+    if test "$mode" = fat
+        # For fat mode with thinking: First try to find a text block
+        set content (echo $response | jq -r '.content[] | select(.type == "text") | .text // empty' 2>/dev/null)
 
-    if not set -l commit_data (echo $complete_json | jq -e '.' 2>/dev/null)
+        # If that fails, try the basic format as a fallback
+        if test -z "$content"
+            set content (echo $response | jq -r '.content[0].text // empty' 2>/dev/null)
+
+            # If still empty, try other possible locations
+            if test -z "$content"
+                set content (echo $response | jq -r '.content[-1].text // empty' 2>/dev/null)
+            end
+        end
+    else
+        # For lean mode: Use the standard format
+        set content (echo $response | jq -r '.content[0].text // empty' 2>/dev/null)
+    end
+
+    if test -z "$content"
+        # Print more debug info to help diagnose the issue
+        gum log -l error "Empty response from API"
+        gum log -l debug "Full response:"
+        echo $response | jq '.'
+        return 1
+    end
+
+    # Clean and parse JSON from content
+    set -l cleaned_content (echo $content | string replace -r '```json\s*' '' | string replace -r '```\s*$' '' | string replace -r '^json\s*' '' | string trim)
+
+    if not set -l commit_data (echo $cleaned_content | jq -e '.' 2>/dev/null)
         gum log -l error "Invalid JSON in response content"
+        gum log -l debug "Content: $content"
         return 1
     end
 
@@ -283,7 +372,9 @@ $recent_commits
         gum log -l error "Missing commit type"
         return 1
     end
+
     set -l scope (echo $commit_data | jq -r '.scope // empty')
+
     if not set -l message (echo $commit_data | jq -r '.message // empty')
         gum log -l error "Missing commit message"
         return 1
