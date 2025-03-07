@@ -1,11 +1,11 @@
 update_check = true
-style = "compact"
+style = "full"
 show_tabs = false
 enter_accept = false
 
 [sync]
 records = true
 
-[theme]
-name = "laramie"
-debug = true
+# [theme]
+# name = "laramie"
+# debug = true

@@ -44,7 +44,6 @@ set fish_greeting
 
 # atuin
 set -gx COLORTERM truecolor
-atuin init fish | source
 
 ## initialize starship prompt
 set -Ux STARSHIP_CONFIG $__fish_config_dir/themes/starship.toml
@@ -59,3 +58,8 @@ set -gx fifc_editor "$EDITOR"
 set -gx fifc_bat_opts --color=always --wrap=character
 
 slog info
+
+if status is-interactive
+    source "$GHOSTTY_RESOURCES_DIR/shell-integration/fish/vendor_conf.d/ghostty-shell-integration.fish"
+    atuin init fish | source
+end

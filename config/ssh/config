@@ -1,14 +1,22 @@
+Host zoraxy
+	HostName 10.10.10.100
+	User root
+
+Host mafl
+	HostName 10.10.10.101
+	User root
+
+Host homeassistant
+	HostName 10.10.10.103
+	User root
+
+Host gay-butt-slave
+  HostName 10.10.10.104
+  User root
+
 Host gh github.com
 	HostName github.com
 	User git
-
-Host proxmox
-	HostName 10.10.10.10
-	User root
-
-Host caddy
-	HostName 10.10.10.100
-	User root
 
 Host *
   IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"

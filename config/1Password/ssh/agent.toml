@@ -1,5 +1,2 @@
 [[ssh-keys]]
 vault = "Development"
-
-[[ssh-keys]]
-vault = "Homelab"

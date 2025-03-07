@@ -5,11 +5,17 @@ fish_add_path -m "$HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin"
 set -gx BUN_INSTALL "$XDG_DATA_HOME/bun"; and mkdir -p "$BUN_INSTALL/bin/"
 fish_add_path "$BUN_INSTALL/bin"
 
-## deno
-set -gx DENO_INSTALL_ROOT $XDG_DATA_HOME/deno/bin; and mkdir -p $DENO_INSTALL_ROOT
-set -gx DENO_REPL_HISTORY "$XDG_STATE_HOME/deno_history.txt"
-set -gx DENO_DIR $XDG_CACHE_HOME/deno; and mkdir -p $DENO_DIR
-fish_add_path "$DENO_INSTALL_ROOT"
+## uv 
+uv generate-shell-completion fish | source
+uvx --generate-shell-completion fish | source
+source "$HOME/.local/share/../bin/env.fish"
+set -gx UV_CACHE_DIR "$XDG_CACHE_HOME/uv"; and mkdir -p "$UV_CACHE_DIR"
+
+# ## deno
+# set -gx DENO_INSTALL_ROOT $XDG_DATA_HOME/deno/bin; and mkdir -p $DENO_INSTALL_ROOT
+# set -gx DENO_REPL_HISTORY "$XDG_STATE_HOME/deno_history.txt"
+# set -gx DENO_DIR $XDG_CACHE_HOME/deno; and mkdir -p $DENO_DIR
+# fish_add_path "$DENO_INSTALL_ROOT"
 
 ## homebrew
 set -gx HOMEBREW_AUTO_UPDATE_SECS 86400

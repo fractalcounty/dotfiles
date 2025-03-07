@@ -1,0 +1,10 @@
+[install.lockfile]
+save = false
+
+[install]
+frozenLockfile = true
+globalDir = "/Users/chip/.local/share/bun/install/global"
+globalBinDir = "/Users/chip/.local/share/bun/bin"
+
+[run]
+bun = true

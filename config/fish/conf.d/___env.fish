@@ -20,8 +20,8 @@ mkdir -p $__fish_config_dir $__fish_cache_dir $__fish_plugins_dir $__fish_themes
 
 # editors
 set -gx PAGER less
-set -gx VISUAL cursor
-set -gx EDITOR micro
+set -gx VISUAL "code --new-window --wait"
+set -gx EDITOR "code --new-window --wait"
 set -gx BROWSER open
 
 # ensure manpage is set
@@ -46,3 +46,5 @@ set -gx SSH_AUTH_SOCK "$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t
 set -gx NODE_ENV development
 
 set -gx PROMPTS_DIR "$XDG_CONFIG_HOME/prompts" && mkdir -p $PROMPTS_DIR
+
+fish_add_path /opt/homebrew/opt/dotnet@8/bin

@@ -101,6 +101,7 @@ cask 'obs' # quicktime: screen recorder
 cask 'cleanshot' # screenshots
 cask 'keka' # file archiver
 cask 'transmission' # torrent client
+cask 'mos' # mouse utilities
 
 ## productivity
 cask 'cursor' # text editor / main IDE

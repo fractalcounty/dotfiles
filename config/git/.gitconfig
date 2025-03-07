@@ -9,6 +9,7 @@ editor = "$VISUAL"
 autocrlf = input
 whitespace = trailing-space,space-before-tab
 pager = "delta --features=interactive"
+excludesFile = ~/.config/git/.gitignore
 
 [credential]
 helper = cache --timeout=3600

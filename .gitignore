@@ -54,6 +54,9 @@
 !/config/gnupg/
 !/config/gnupg/gpg-agent.conf
 
+!/config/languagetool/
+!/config/languagetool/**
+
 !/config/micro/
 !/config/micro/colorschemes/
 !/config/micro/colorschemes/laramie-tc.micro
@@ -68,6 +71,8 @@
 
 !/config/starship/
 !/config/starship/**
+
+!/config/.bunfig.toml
 
 !/src/
 !/src/**

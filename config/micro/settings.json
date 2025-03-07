@@ -1,3 +1,7 @@
 {
-    "colorscheme": "laramie-tc"
+  "colorscheme": "laramie-tc",
+  "autosu": true,
+  "tabsize": 2,
+  "softwrap": true,
+  "wrap": true
 }

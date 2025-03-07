@@ -1,26 +1,62 @@
+auto-update = download
+auto-update-channel = tip
+
+# keybinds
+keybind = global:cmd+grave_accent=toggle_quick_terminal
+keybind = performable:cmd+c=copy_to_clipboard
+keybind = performable:cmd+v=paste_from_clipboard
+keybind = performable:cmd+r=reload_config
+
+# font
 font-family = "CommitMono Nerd Font Mono"
-font-synthetic-style = ""
+font-feature = ss01
+font-feature = ss02
+font-feature = ss03
+font-feature = ss04
+font-feature = ss05
+font-feature = cv02
 font-size = 15
-font-thicken = false
-cursor-opacity = 0.8
-cursor-style = block
-mouse-hide-while-typing = false
-background-opacity = 0.97
-background-blur-radius = 40
-theme = laramie
-window-vsync = true
-window-padding-balance = true
-macos-titlebar-style = hidden
-window-colorspace = display-p3
-auto-update = check
-quit-after-last-window-closed = true
+font-thicken = true
+font-synthetic-style = false
 window-inherit-font-size = false
+
+# ui
+theme = laramie
+cursor-style = bar
+cursor-click-to-move = true
+cursor-opacity = 0.8
+background-opacity = 0.75
+background-blur = 100
+
+# mouse
+mouse-hide-while-typing = false
+
+# appearance
+alpha-blending = linear-corrected
+window-colorspace = display-p3
+macos-titlebar-style = transparent
+macos-icon = custom-style
+macos-icon-ghost-color = 7aa2f7
+macos-icon-screen-color = 7aa2f7,2e3450,bb9af7
+window-decoration = auto
+macos-titlebar-proxy-icon = hidden
+
+# window
+window-vsync = false
+window-padding-balance = true
 window-height = 28
 window-width = 85
-window-padding-x = 24
-window-padding-y = 18
+window-padding-x = 16
+window-padding-y = 8
 window-save-state = never
-clipboard-read = allow
+clipboard-read = ask
 clipboard-write = allow
+clipboard-paste-protection = true
+clipboard-trim-trailing-spaces = true
 shell-integration = fish
 shell-integration-features = cursor,sudo,title
+macos-auto-secure-input = true
+macos-secure-input-indication = true
+confirm-close-surface = false
+app-notifications = clipboard-copy
+desktop-notifications = true
