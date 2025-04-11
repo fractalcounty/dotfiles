@@ -132,12 +132,12 @@ The main configuration file is a fairly minimal YAML file that defines the behav
 ```yaml
 system:
   friendly_name: "Chip's MacBook" # i.e your device's name in the Find My app
-  host_name: 'chips-macbook' # aka the hostname, localhost name and NetBIOS name
+  host_name: "chips-macbook" # aka the hostname, localhost name and NetBIOS name
 symlinks:
-  '$REPO_DIR/config/': '$HOME/.config' # replaces ~/.config with the repo's config dir
-  '$REPO_DIR/Brewfile': '$HOME/.Brewfile' # so you can just run `brew bundle --global` to install everything
+  "$REPO_DIR/config/": "$HOME/.config" # replaces ~/.config with the repo's config dir
+  "$REPO_DIR/Brewfile": "$HOME/.Brewfile" # so you can just run `brew bundle --global` to install everything
 brew:
-  bundle_file: '$HOME/.Brewfile' # path to the homebrew Bundle symlink created above
+  bundle_file: "$HOME/.Brewfile" # path to the homebrew Bundle symlink created above
   autoupdate: true # automatically update the Brewfile when new packages are found via homebrew-autoupdate
   autoupdate_interval: 43200 # interval in seconds to check for updates
   cleanup: false # whether to remove all installed packages not listed in the Brewfile, i.e a clean install
