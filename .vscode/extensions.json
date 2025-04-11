@@ -1,10 +1,7 @@
 {
   "recommendations": [
     "redhat.vscode-yaml",
-    "1Password.op-vscode",
     "naumovs.color-highlight",
-    "bmalehorn.vscode-fish",
-    "tamasfe.even-better-toml",
-    "foxundermoon.shell-format"
+    "tamasfe.even-better-toml"
   ]
 }

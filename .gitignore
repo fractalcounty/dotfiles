@@ -3,6 +3,9 @@
 
 *
 
+!/.cursor/
+!/.cursor/**
+
 !/.vscode/
 !/.vscode/**
 
@@ -28,7 +31,7 @@
 !/config/act/**
 
 !/config/atuin/
-!/config/atuin/config.toml
+!/config/atuin/**
 
 !/config/gh/
 !/config/gh/**
@@ -38,6 +41,9 @@
 
 !/config/docker/
 !/config/docker/config.json
+
+!/config/fastfetch/
+!/config/fastfetch/**
 
 !/config/fish/
 !/config/fish/conf.d/
