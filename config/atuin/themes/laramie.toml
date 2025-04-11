@@ -1,0 +1,12 @@
+[theme]
+name = "laramie"
+
+[colors]
+Guidance = "#545c7e"   # entry age
+AlertInfo = "#7aa2f7"  # entry time
+AlertError = "#bb9af7" # entry time (bad) + selected entry name
+Base = "#8089b3"       # title + unselected entry name
+Annotation = "#6881C0" # help controls
+AlertWarn = "#bb9af7"  # unused?
+Important = "#bb9af7"  # unused?
+Title = "#bb9af7"      # unused?

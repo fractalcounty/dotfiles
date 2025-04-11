@@ -1,0 +1,97 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "general": {
+    "multithreading": true
+  },
+  "display": {
+    "separator": "   ",
+    "color": {
+      "title": "magenta"
+    }
+  },
+  "modules": [
+    "break",
+    {
+      "type": "title",
+      "format": "{user-name-colored}{at-symbol-colored}{host-name-colored}"
+    },
+    "break",
+    {
+      "key": "󰌢 Machine      ",
+      "keyColor": "blue",
+      "type": "host"
+    },
+    {
+      "key": " OS           ",
+      "keyColor": "blue",
+      "type": "os"
+    },
+    {
+      "key": " Kernel       ",
+      "keyColor": "blue",
+      "type": "kernel"
+    },
+    {
+      "key": " Packages     ",
+      "keyColor": "blue",
+      "type": "packages"
+    },
+    {
+      "key": " Shell        ",
+      "keyColor": "blue",
+      "type": "shell"
+    },
+    {
+      "key": " Terminal     ",
+      "keyColor": "blue",
+      "type": "terminal"
+    },
+    {
+      "key": " Battery      ",
+      "keyColor": "blue",
+      "type": "battery"
+    },
+    {
+      "type": "cpu",
+      "showPeCoreCount": true,
+      "temp": true,
+      "key": "󰻠 SoC          ",
+      "keyColor": "blue"
+    },
+    {
+      "key": "󰑭 Memory       ",
+      "keyColor": "blue",
+      "type": "memory"
+    },
+    {
+      "key": " Disk         ",
+      "keyColor": "blue",
+      "type": "disk"
+    },
+    {
+      "type": "display",
+      "format": "{inch}\" {width}x{height} ({ppi} PPI) as {scaled-width}x{scaled-height} ({scale-factor}x) @ {refresh-rate}Hz {bit-depth}bpc",
+      "keyColor": "blue",
+      "key": "󰍹 {name}    "
+    },
+    {
+      "key": "󰂯 Bluetooth    ",
+      "keyColor": "blue",
+      "type": "bluetoothradio"
+    },
+    {
+      "key": " Input        ",
+      "keyColor": "blue",
+      "type": "keyboard"
+    },
+    "break",
+    {
+      "type": "colors",
+      "paddingLeft": 0,
+      "symbol": "circle",
+      "block": {
+        "width": 10
+      }
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "general": {
+    "multithreading": true
+  },
+  "display": {
+    "separator": "   ",
+    "color": {
+      "title": "magenta"
+    }
+  },
+  "modules": [
+    "break",
+    {
+      "type": "title",
+      "format": "{user-name-colored}{at-symbol-colored}{host-name-colored}"
+    },
+    "break",
+    {
+      "key": "󰌢 Machine      ",
+      "keyColor": "blue",
+      "type": "host"
+    },
+    {
+      "key": " OS           ",
+      "keyColor": "blue",
+      "type": "os"
+    },
+    {
+      "key": " Kernel       ",
+      "keyColor": "blue",
+      "type": "kernel"
+    },
+    {
+      "key": " Packages     ",
+      "keyColor": "blue",
+      "type": "packages"
+    },
+    {
+      "key": " Shell        ",
+      "keyColor": "blue",
+      "type": "shell"
+    },
+    {
+      "key": " Terminal     ",
+      "keyColor": "blue",
+      "type": "terminal"
+    },
+    "break",
+    {
+      "type": "custom",
+      "key": "Hardware",
+      "keyColor": "magenta",
+      "outputColor": "magenta",
+      "format": ""
+    },
+    "break",
+    {
+      "key": " Battery      ",
+      "keyColor": "blue",
+      "type": "battery"
+    },
+    {
+      "type": "cpu",
+      "showPeCoreCount": true,
+      "temp": true,
+      "key": "󰻠 SoC          ",
+      "keyColor": "blue"
+    },
+    {
+      "key": "󰑭 Memory       ",
+      "keyColor": "blue",
+      "type": "memory"
+    },
+    {
+      "key": " Disk         ",
+      "keyColor": "blue",
+      "type": "disk"
+    },
+    {
+      "type": "display",
+      "format": " ",
+      "keyColor": "blue",
+      "key": "󰍹 {name} "
+    },
+    {
+      "key": "  • Resolution ",
+      "keyColor": "dim_blue",
+      "type": "display",
+      "format": "{width}x{height} as {scaled-width}x{scaled-height} ({scale-factor}x) @ {refresh-rate}Hz"
+    },
+    {
+      "key": "  • Dimensions ",
+      "keyColor": "dim_blue",
+      "type": "monitor",
+      "format": "{inch}\" at {physical-width}x{physical-height}mm ({ppi} PPI)"
+    },
+    {
+      "key": "  • HDR        ",
+      "keyColor": "dim_blue",
+      "type": "display",
+      "format": "{hdr-enabled} (capable: {hdr-compatible}) @ {bit-depth} bpc"
+    },
+    {
+      "key": "󰂯 Bluetooth    ",
+      "keyColor": "blue",
+      "type": "bluetoothradio"
+    },
+    {
+      "key": " Input        ",
+      "keyColor": "blue",
+      "type": "keyboard"
+    },
+
+    "break",
+    {
+      "type": "custom",
+      "key": "Network",
+      "keyColor": "magenta"
+    },
+    "break",
+    {
+      "key": " MAC Address  ",
+      "keyColor": "blue",
+      "type": "localip",
+      "showIpv4": false,
+      "showIpv6": false,
+      "showMac": true,
+      "showLoop": false,
+      "showPrefixLen": false,
+      "showAllIps": false,
+      "showFlags": false,
+      "defaultRouteOnly": true,
+      "format": "{mac}"
+    },
+    {
+      "key": "󰩟 Local IPv4   ",
+      "keyColor": "blue",
+      "type": "localip",
+      "showIpv4": true,
+      "showIpv6": false,
+      "showMac": false,
+      "showLoop": false,
+      "showPrefixLen": true,
+      "showAllIps": false,
+      "showFlags": false,
+      "defaultRouteOnly": true,
+      "format": "{ipv4}"
+    },
+    {
+      "key": "󰩟 Local IPv6   ",
+      "keyColor": "blue",
+      "type": "localip",
+      "showIpv4": false,
+      "showIpv6": true,
+      "showMac": false,
+      "showLoop": false,
+      "showPrefixLen": true,
+      "showAllIps": false,
+      "showFlags": false,
+      "defaultRouteOnly": true,
+      "format": "{ipv6}"
+    },
+    {
+      "key": " Public IPv4  ",
+      "keyColor": "blue",
+      "type": "publicip",
+      "timeout": 10000,
+      "ipv6": false,
+      "format": "{ip}"
+    },
+    {
+      "key": " Public IPv6  ",
+      "keyColor": "blue",
+      "type": "publicip",
+      "timeout": 10000,
+      "ipv6": true,
+      "format": "{ip}"
+    },
+    {
+      "key": "󰮌 DNS          ",
+      "keyColor": "blue",
+      "type": "dns",
+      "showType": "ipv4"
+    },
+    {
+      "key": "󰮌 DNS          ",
+      "keyColor": "blue",
+      "type": "dns",
+      "showType": "ipv6"
+    },
+    {
+      "key": " WiFi         ",
+      "keyColor": "blue",
+      "type": "wifi",
+      "format": "{protocol} {band} GHz via {inf-desc}"
+    },
+    "break",
+    "break",
+    {
+      "type": "colors",
+      "paddingLeft": 0,
+      "symbol": "circle",
+      "block": {
+        "width": 10
+      }
+    }
+  ]
+}
