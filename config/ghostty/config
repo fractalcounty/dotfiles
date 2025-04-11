@@ -25,7 +25,7 @@ theme = laramie
 cursor-style = bar
 cursor-click-to-move = true
 cursor-opacity = 0.8
-background-opacity = 0.75
+background-opacity = 0.85
 background-blur = 100
 
 # mouse
