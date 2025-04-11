@@ -21,7 +21,7 @@ function llm_commit --description "generate conventional commit messages using o
     set -l api_endpoint "https://openrouter.ai/api/v1/chat/completions"
     set -g max_retries 3
     set -l initial_backoff 1 # seconds
-    set -g max_diff_lines 500 # guardrail against huge diffs
+    set -g max_diff_lines 2000 # guardrail against huge diffs
 
     #* system prompt (can be overridden by env var)
     set -l default_system_prompt \
